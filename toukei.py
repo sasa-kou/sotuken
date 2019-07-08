@@ -1,4 +1,6 @@
 import glob
+import os
+import shutil
 from functools import reduce
 
 memo = './result.txt'
@@ -128,7 +130,7 @@ class Operation:
         self.outou_label = outou_label
         self.katari = katari
 
-    def trance_data(self):
+    def trance_data(self):  # 語りと応答の情報を解析しやすいように処理
         dic = {}
         time_list = list(self.outou.keys())  # 時間情報を取得
         tmp_list = list(self.katari.keys())
@@ -147,36 +149,39 @@ class Operation:
 
         return dic
 
+class Compare:
+    def __init__(self,katari):
+        self.katari = katari
 
-def match(*args):
-    data = []  # 個数をカウントするためにラベルを全て保存
-    label = []  # 出現するラベルのリスト
-    time_list = reduce(lambda x, y: list(
-        set(x) & set(y)), args)  # 全てのargsに対してset()
-    time_list.sort()
+    def match(self,*args):
+        data = []  # 個数をカウントするためにラベルを全て保存
+        label = []  # 出現するラベルのリスト
+        time_list = reduce(lambda x, y: list(
+            set(x) & set(y)), args)  # 全てのargsに対してset()
+        time_list.sort()
 
-    for time in time_list:
-        # argsのラベル情報の配列を作成
-        tmp = list(map(lambda x: list(x[time].values()), args))
-        judg = reduce(lambda x, y: list(
-            set(x) & set(y)), tmp)  #ラベルの一致不一致
-        if judg:
-            tmp = list(args[0][time].values())[0]  # ラベル情報を取得
-            data.append(tmp)
-            if tmp not in label:
-                label.append(tmp)
+        for time in time_list:
+            # argsのラベル情報の配列を作成
+            tmp = list(map(lambda x: list(x[time].values()), args))
+            judg = reduce(lambda x, y: list(
+                set(x) & set(y)), tmp)  #ラベルの一致不一致
+            if judg:
+                tmp = list(args[0][time].values())[0]  # ラベル情報を取得
+                data.append(tmp)
+                if tmp not in label:
+                    label.append(tmp)
 
-        """
-        with open(memo,'a') as f:
-            f.write(str(time) + ' count' + '\n')
-            f.write(str(args[0][time]) + '\n')
-            f.write(str(args[1][time]) + '\n')
-            f.write(str(args[2][time]) + '\n' + '\n')
-        """
+            """
+            with open(memo,'a') as f:
+                f.write(str(time) + ' count' + '\n')
+                f.write(str(args[0][time]) + '\n')
+                f.write(str(args[1][time]) + '\n')
+                f.write(str(args[2][time]) + '\n' + '\n')
+            """
 
-    print("語り終了時間が一致した応答の数:", len(time_list))
-    for word in label:
-        print(word, data.count(word))
+        print("語り終了時間が一致した応答の数:", len(time_list))
+        for word in label:
+            print(word, data.count(word))
 
 
 if __name__ == '__main__':
@@ -201,7 +206,8 @@ if __name__ == '__main__':
     op = Operation(outou, outou_label, katari)
     c = op.trance_data()
 
-    match(a,b)
-    match(a,c)
-    match(b,c)
-    match(a, b, c)
+    comp = Compare(katari)
+    comp.match(a,b)
+    comp.match(a,c)
+    comp.match(b,c)
+    comp.match(a, b, c)
