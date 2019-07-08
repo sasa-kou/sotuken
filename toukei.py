@@ -153,6 +153,8 @@ class Operation:
 class Compare:
     def __init__(self, katari):
         self.katari = katari
+        self.time = list(katari.keys())
+        self.word = list(katari.values())
 
     def match(self, *args):
         data = []  # 個数をカウントするためにラベルを全て保存
@@ -160,6 +162,7 @@ class Compare:
         time_list = reduce(lambda x, y: list(
             set(x) & set(y)), args)  # 全てのargsに対してset()
         time_list.sort()    #語り終了時間のリスト
+        con = 0
 
         for time in time_list:
             # argsのラベル情報の配列を作成
@@ -169,9 +172,18 @@ class Compare:
             if judg:
                 tmp = list(args[0][time].values())[0]  # ラベル情報を取得
                 data.append(tmp)
-                if tmp not in label:
+                if tmp not in label:    # ラベルの出現リストに値を追加
                     label.append(tmp)
 
+                index = self.time.index(time)
+                sent = ""
+                for word in self.word[con:index]:
+                    sent += word
+                con = index
+                print("語り",sent)
+                print(args[0][time])
+                print(args[1][time])
+                
             """
             with open(memo,'a') as f:
                 f.write(str(time) + ' count' + '\n')
@@ -184,33 +196,6 @@ class Compare:
         print("そのうちラベルも一致した応答の数:",len(data))
         for word in label:
             print(word, data.count(word))
-
-    def test(self,*args):
-        katari_time = list(self.katari.keys())
-        katari_word = list(self.katari.values())
-        #print(katari_time, katari_word)
-        con = 0
-
-        time_list = reduce(lambda x, y: list(
-            set(x) & set(y)), args)  # 全てのargsに対してset()
-        time_list.sort()
-
-        for time in time_list:
-            # argsのラベル情報の配列を作成
-            tmp = list(map(lambda x: list(x[time].values()), args))
-            judg = reduce(lambda x, y: list(
-                set(x) & set(y)), tmp)  # ラベルの一致不一致
-            if judg:
-                tmp = list(args[0][time].values())[0]  # ラベル情報を取得
-                index = katari_time.index(time)
-                print(index)
-                con += 1
-                print(self.katari[time])
-
-        print("con:", con)
-        print("OK :", len(time_list))
-        print(self.katari)
-
 
 if __name__ == '__main__':
     kt = Katari('01')
@@ -236,8 +221,6 @@ if __name__ == '__main__':
 
     comp = Compare(katari)
     comp.match(a, b)
-    comp.match(a, c)
-    comp.match(b, c)
-    comp.match(a, b, c)
-
-    #comp.test(a,b)
+    #comp.match(a, c)
+    #comp.match(b, c)
+    #comp.match(a, b, c)
