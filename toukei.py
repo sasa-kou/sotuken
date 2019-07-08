@@ -149,22 +149,23 @@ class Operation:
 
         return dic
 
+
 class Compare:
-    def __init__(self,katari):
+    def __init__(self, katari):
         self.katari = katari
 
-    def match(self,*args):
+    def match(self, *args):
         data = []  # 個数をカウントするためにラベルを全て保存
         label = []  # 出現するラベルのリスト
         time_list = reduce(lambda x, y: list(
             set(x) & set(y)), args)  # 全てのargsに対してset()
-        time_list.sort()
+        time_list.sort()    #語り終了時間のリスト
 
         for time in time_list:
             # argsのラベル情報の配列を作成
             tmp = list(map(lambda x: list(x[time].values()), args))
             judg = reduce(lambda x, y: list(
-                set(x) & set(y)), tmp)  #ラベルの一致不一致
+                set(x) & set(y)), tmp)  # ラベルの一致不一致
             if judg:
                 tmp = list(args[0][time].values())[0]  # ラベル情報を取得
                 data.append(tmp)
@@ -180,8 +181,35 @@ class Compare:
             """
 
         print("語り終了時間が一致した応答の数:", len(time_list))
+        print("そのうちラベルも一致した応答の数:",len(data))
         for word in label:
             print(word, data.count(word))
+
+    def test(self,*args):
+        katari_time = list(self.katari.keys())
+        katari_word = list(self.katari.values())
+        #print(katari_time, katari_word)
+        con = 0
+
+        time_list = reduce(lambda x, y: list(
+            set(x) & set(y)), args)  # 全てのargsに対してset()
+        time_list.sort()
+
+        for time in time_list:
+            # argsのラベル情報の配列を作成
+            tmp = list(map(lambda x: list(x[time].values()), args))
+            judg = reduce(lambda x, y: list(
+                set(x) & set(y)), tmp)  # ラベルの一致不一致
+            if judg:
+                tmp = list(args[0][time].values())[0]  # ラベル情報を取得
+                index = katari_time.index(time)
+                print(index)
+                con += 1
+                print(self.katari[time])
+
+        print("con:", con)
+        print("OK :", len(time_list))
+        print(self.katari)
 
 
 if __name__ == '__main__':
@@ -207,7 +235,9 @@ if __name__ == '__main__':
     c = op.trance_data()
 
     comp = Compare(katari)
-    comp.match(a,b)
-    comp.match(a,c)
-    comp.match(b,c)
+    comp.match(a, b)
+    comp.match(a, c)
+    comp.match(b, c)
     comp.match(a, b, c)
+
+    #comp.test(a,b)
