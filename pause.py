@@ -60,7 +60,7 @@ class Outou:
                 word = tmp_str+word
                 label = data[num].lstrip('label=')  # labelの取得
                 begin = float(data[num-2])  # 開始時刻の取得
-                #print(word, label, begin)
+                # print(word, label, begin)
 
                 self.outou.update({begin: word})
                 self.outou_label.update({begin: label})
@@ -112,62 +112,29 @@ class Pause:
 def trance_data(pause, outou):  # 情報処理
     interval = 0  # 間で開始した応答数
     dic = []      # 一致を検知する基準
-    time_list = list(outou.keys())  # 応答の時間情報
+    time_list = list(outou.keys())  # 応答の開始時間
     time_list.sort()
 
     for time in pause:
         start = float(time[0])  # 間の開始時間
         end = float(time[1])  # 間の終了じかん
-        # print(start,end)
         for i in time_list:
             if start < i and i < end:
-                # print(i,end="")
-                # print(outou[i])
-                dic.append(time[0])  # 間の開始時間を比較基準とする
+                print(start,end)
+                print(i,end="")
+                print(outou[i])
+                dic.append(start)  # 間の開始時間を比較基準とする
                 interval += 1
                 break
 
     return interval, dic
 
 
-class Compare:
-    def __init__(self, katari):
-        self.katari = katari
-        self.time = list(katari.keys())
-        self.word = list(katari.values())
+def compare(*args):  # 間で開始した応答時間の一致
+    comp = reduce(lambda x, y: list(
+        set(x) & set(y)), args)
 
-    def match(self, *args):
-        data = []  # 個数をカウントするためにラベルを全て保存
-        label = []  # 出現するラベルのリスト
-        time_list = reduce(lambda x, y: list(
-            set(x) & set(y)), args)  # 全てのargsに対してset()
-        time_list.sort()  # 語り終了時間のリスト
-        con = 0
-
-        for time in time_list:
-            # argsのラベル情報の配列を作成
-            tmp = list(map(lambda x: list(x[time].values()), args))
-            judg = reduce(lambda x, y: list(
-                set(x) & set(y)), tmp)  # ラベルの一致不一致
-            if judg:
-                tmp = list(args[0][time].values())[0]  # ラベル情報を取得
-                data.append(tmp)
-                if tmp not in label:    # ラベルの出現リストに値を追加
-                    label.append(tmp)
-
-                index = self.time.index(time) + 1
-                sent = ""
-                for word in self.word[con:index]:
-                    sent += word
-                con = index
-                #print("語り", sent)
-                # print(args[0][time])
-                # print(args[1][time])
-
-        print("語り終了時間が一致した応答の数:", len(time_list))
-        print("そのうちラベルも一致した応答の数:", len(data))
-        for word in label:
-            print(word, data.count(word))
+    return len(comp)
 
 
 if __name__ == '__main__':
@@ -176,7 +143,13 @@ if __name__ == '__main__':
 
     ot = Outou('01', 'a')
     outou, outou_label = ot.read_data()
+    a_interval, a_dic = trance_data(pause, outou)
 
-    interval, dic = trance_data(pause, outou)
-    print(interval)
-    print(dic)
+    ot = Outou('01', 'b')
+    outou, outou_label = ot.read_data()
+    b_interval, b_dic = trance_data(pause, outou)
+
+    print('Aの間で開始した応答数', a_interval)
+    print('Bの間で開始した応答数', b_interval)
+
+    print('ABの一致', compare(a_dic, b_dic))
