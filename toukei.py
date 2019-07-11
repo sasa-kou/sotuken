@@ -175,7 +175,7 @@ class Compare:
                 if tmp not in label:    # ラベルの出現リストに値を追加
                     label.append(tmp)
 
-                index = self.time.index(time)
+                index = self.time.index(time) + 1
                 sent = ""
                 for word in self.word[con:index]:
                     sent += word
@@ -183,6 +183,7 @@ class Compare:
                 print("語り",sent)
                 print(args[0][time])
                 print(args[1][time])
+               
                 
             """
             with open(memo,'a') as f:
