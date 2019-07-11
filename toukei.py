@@ -3,10 +3,6 @@ import os
 import shutil
 from functools import reduce
 
-memo = './result.txt'
-with open(memo, 'w') as f:
-    f.write('')
-
 
 class Outou:
     def __init__(self, file_num, file_name):
@@ -161,7 +157,7 @@ class Compare:
         label = []  # 出現するラベルのリスト
         time_list = reduce(lambda x, y: list(
             set(x) & set(y)), args)  # 全てのargsに対してset()
-        time_list.sort()    #語り終了時間のリスト
+        time_list.sort()  # 語り終了時間のリスト
         con = 0
 
         for time in time_list:
@@ -180,23 +176,15 @@ class Compare:
                 for word in self.word[con:index]:
                     sent += word
                 con = index
-                print("語り",sent)
-                print(args[0][time])
-                print(args[1][time])
-               
-                
-            """
-            with open(memo,'a') as f:
-                f.write(str(time) + ' count' + '\n')
-                f.write(str(args[0][time]) + '\n')
-                f.write(str(args[1][time]) + '\n')
-                f.write(str(args[2][time]) + '\n' + '\n')
-            """
+                #print("語り", sent)
+                # print(args[0][time])
+                # print(args[1][time])
 
         print("語り終了時間が一致した応答の数:", len(time_list))
-        print("そのうちラベルも一致した応答の数:",len(data))
+        print("そのうちラベルも一致した応答の数:", len(data))
         for word in label:
             print(word, data.count(word))
+
 
 if __name__ == '__main__':
     kt = Katari('01')
@@ -222,6 +210,6 @@ if __name__ == '__main__':
 
     comp = Compare(katari)
     comp.match(a, b)
-    #comp.match(a, c)
-    #comp.match(b, c)
-    #comp.match(a, b, c)
+    comp.match(a, c)
+    comp.match(b, c)
+    comp.match(a, b, c)
