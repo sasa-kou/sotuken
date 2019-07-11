@@ -108,74 +108,26 @@ class Pause:
 
         file.close()
 
-    def __init__(self, file_num):
-        self.katari = {}
-        self.file_num = file_num
 
-    def read_data(self):  # 全ファイルを検索して読み込み
-        file_root = '../../katari_info/'
-        file_end = '/*.morph'
+def trance_data(pause, outou):  # 情報処理
+    interval = 0  # 間で開始した応答数
+    dic = []      # 一致を検知する基準
+    time_list = list(outou.keys())  # 応答の時間情報
+    time_list.sort()
 
-        files = glob.glob(file_root + self.file_num + file_end)
-
-        for file in files:
-            # print(file)
-            self.readKatari(file)
-
-        return self.katari
-
-    def readKatari(self, file_name):  # 語り手側  {語り終了時間:言葉}
-        file = open(file_name)  # データ入力
-        lines = file.readlines()
-
-        for data in lines[len(lines)]:
-            data = data.rstrip('\n')  # 改行の削除
-            data = data.split(',')  # ','で分割
-            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
-
-            # 例外処理
-            if num == 0:
-                continue
-            elif data[0] == "silB" or data[0] == "silE":
-                continue
-            elif data[0] == "sp" or data[0] == "pause":
-                continue
-            elif data[0] == "(" or data[0] == ")":
-                continue
-            elif data[1] == "補助記号":
-                continue
-
-            word = data[0]
-            end = float(data[num])
-            self.katari.update({end: word})
-
-        file.close()
-
-
-class Operation:
-    def __init__(self, outou, outou_label, katari):
-        self.outou = outou
-        self.outou_label = outou_label
-        self.katari = katari
-
-    def trance_data(self):  # 語りと応答の情報を解析しやすいように処理
-        dic = {}
-        time_list = list(self.outou.keys())  # 時間情報を取得
-        tmp_list = list(self.katari.keys())
-        time_list.extend(tmp_list)  # 二つを結合しソート
-        time_list.sort()
-
+    for time in pause:
+        start = float(time[0])  # 間の開始時間
+        end = float(time[1])  # 間の終了じかん
+        # print(start,end)
         for i in time_list:
-            if i in self.katari:
-                time = i  # 時間情報の退避
-            elif i in self.outou:
-                # 比較用
-                # {'語り終了時間：{応答側：ラベル}}
-                dic.update({time: {self.outou[i]: self.outou_label[i]}})
-            else:
-                print('エラー：' + outou[i] + outou_label[i])
+            if start < i and i < end:
+                # print(i,end="")
+                # print(outou[i])
+                dic.append(time[0])  # 間の開始時間を比較基準とする
+                interval += 1
+                break
 
-        return dic
+    return interval, dic
 
 
 class Compare:
@@ -219,4 +171,12 @@ class Compare:
 
 
 if __name__ == '__main__':
-    print('Done')
+    ps = Pause('01')
+    pause = ps.read_data()
+
+    ot = Outou('01', 'a')
+    outou, outou_label = ot.read_data()
+
+    interval, dic = trance_data(pause, outou)
+    print(interval)
+    print(dic)
