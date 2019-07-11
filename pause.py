@@ -18,9 +18,9 @@ class Outou:
 
         files = glob.glob(file_root + self.file_num +
                           '/' + self.file_name + file_end)
+        files.sort()
 
         for file in files:
-            # print(file)
             self.readOutou(file)
 
         return self.outou, self.outou_label
@@ -79,14 +79,17 @@ class Pause:
     def __init__(self, file_num):
         self.pause = []
         self.file_num = file_num
+        self.end_time = 0.0
 
     def read_data(self):
         file_root = '../../katari_info/'
         file_end = '/*.morph'
 
         files = glob.glob(file_root + self.file_num + file_end)
+        files.sort()
 
         for file in files:
+            print(file)
             self.readPause(file)
 
         return self.pause
@@ -94,6 +97,23 @@ class Pause:
     def readPause(self, file_name):
         file = open(file_name)  # データ入力
         lines = file.readlines()
+
+        # ファイルの最初と最後の時間を取得
+        begin = lines[1]
+        begin = begin.split(',')
+        begin = float(begin[1])
+        end = lines[len(lines)-1]
+        end = end.split(',')
+        end = float(end[2].rstrip('\n'))  # 改行の削除
+
+        if self.end_time != 0.0:  # 一番最初のファイルはスルー
+            if begin - self.end_time >= 10:
+                print(True)
+
+        self.end_time = end  # 終了時刻の更新
+
+        # print(begin)
+        # print(end)
 
         for data in lines[0:len(lines)]:
             data = data.rstrip('\n')  # 改行の削除
@@ -127,9 +147,9 @@ def trance_data(pause, outou):  # 情報処理
         end = float(time[1])  # 間の終了じかん
         for i in time_list:
             if start < i and i < end:
-                print(start, end)
-                print(i, end="")
-                print(outou[i])
+                #print(start, end)
+                #print(i, end="")
+                # print(outou[i])
                 dic.append(start)  # 間の開始時間を比較基準とする
                 interval += 1
                 break
