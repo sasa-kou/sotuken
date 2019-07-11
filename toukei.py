@@ -18,6 +18,7 @@ class Outou:
 
         files = glob.glob(file_root + self.file_num +
                           '/' + self.file_name + file_end)
+        files.sort()
 
         for file in files:
             # print(file)
@@ -85,6 +86,7 @@ class Katari:
         file_end = '/*.morph'
 
         files = glob.glob(file_root + self.file_num + file_end)
+        files.sort()
 
         for file in files:
             # print(file)
