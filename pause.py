@@ -83,20 +83,21 @@ class Pause:
 
     def read_data(self):
         file_root = '../../katari_info/'
-        file_end = '/*.morph'
-
-        files = glob.glob(file_root + self.file_num + file_end)
-        files.sort()
-
-        for file in files:
-            print(file)
-            self.readPause(file)
+        big_files = glob.glob(file_root + self.file_num +
+                              '/' + self.file_num + '-*')
+        for small_file in big_files:
+            files = glob.glob(small_file + '/*.morph')
+            files.sort()
+            for file in files:
+                self.readPause(file)
+            self.end_time = 0.0  # 一つの01-*が終わったら終了時刻を初期化
 
         return self.pause
 
-    def readPause(self, file_name):
+    def readPause(self, file_name):  # 語り側   [間の開始時間：間の終了時間]
         file = open(file_name)  # データ入力
         lines = file.readlines()
+        print(file)
 
         # ファイルの最初と最後の時間を取得
         begin = lines[1]
@@ -107,13 +108,8 @@ class Pause:
         end = float(end[2].rstrip('\n'))  # 改行の削除
 
         if self.end_time != 0.0:  # 一番最初のファイルはスルー
-            if begin - self.end_time >= 10:
+            if begin != self.end_time:
                 print(True)
-
-        self.end_time = end  # 終了時刻の更新
-
-        # print(begin)
-        # print(end)
 
         for data in lines[0:len(lines)]:
             data = data.rstrip('\n')  # 改行の削除
@@ -129,8 +125,11 @@ class Pause:
                         self.pause.pop(-1)  # 最後の要素を削除
 
                 time = [start, end]
+                print(time)
                 self.pause.append(time)
 
+        print(begin, self.end_time)
+        self.end_time = end  # 終了時刻の更新
         self.pause.sort()
 
         file.close()
