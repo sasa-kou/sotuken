@@ -120,30 +120,24 @@ class Katari:
         file.close()
 
 
-class Operation:
-    def __init__(self, outou, outou_label, katari):
-        self.outou = outou
-        self.outou_label = outou_label
-        self.katari = katari
+def trance_data(outou, outou_label, katari):  # 語りと応答の情報を解析しやすいように処理
+    dic = {}
+    time_list = list(outou.keys())  # 時間情報を取得
+    tmp_list = list(katari.keys())
+    time_list.extend(tmp_list)  # 二つを結合しソート
+    time_list.sort()
 
-    def trance_data(self):  # 語りと応答の情報を解析しやすいように処理
-        dic = {}
-        time_list = list(self.outou.keys())  # 時間情報を取得
-        tmp_list = list(self.katari.keys())
-        time_list.extend(tmp_list)  # 二つを結合しソート
-        time_list.sort()
+    for i in time_list:
+        if i in katari:
+            time = i  # 時間情報の退避
+        elif i in outou:
+            # 比較用
+            # {'語り終了時間：{応答側：ラベル}}
+            dic.update({time: {outou[i]: outou_label[i]}})
+        else:
+            print('エラー：' + outou[i] + outou_label[i])
 
-        for i in time_list:
-            if i in self.katari:
-                time = i  # 時間情報の退避
-            elif i in self.outou:
-                # 比較用
-                # {'語り終了時間：{応答側：ラベル}}
-                dic.update({time: {self.outou[i]: self.outou_label[i]}})
-            else:
-                print('エラー：' + outou[i] + outou_label[i])
-
-        return dic
+    return dic
 
 
 class Compare:
@@ -193,20 +187,17 @@ if __name__ == '__main__':
     ot = Outou('01', 'a')
     outou, outou_label = ot.read_data()
     ot.view()
-    op = Operation(outou, outou_label, katari)
-    a = op.trance_data()
+    a = trance_data(outou, outou_label, katari)
 
     ot = Outou('01', 'b')
     outou, outou_label = ot.read_data()
     ot.view()
-    op = Operation(outou, outou_label, katari)
-    b = op.trance_data()
+    b = trance_data(outou, outou_label, katari)
 
     ot = Outou('01', 'c')
     outou, outou_label = ot.read_data()
     ot.view()
-    op = Operation(outou, outou_label, katari)
-    c = op.trance_data()
+    c = trance_data(outou, outou_label, katari)
 
     comp = Compare(katari)
     comp.match(a, b)
