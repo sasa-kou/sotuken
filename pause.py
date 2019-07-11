@@ -101,6 +101,13 @@ class Pause:
             if data[0] == 'silE' or data[0] == 'silB' or data[0] == 'sp' or data[0] == 'pause':
                 start = float(data[1:3][0])
                 end = float(data[1:3][1])
+
+                if len(self.pause) != 0:  # 一番初めは比較対象がないので
+                    # 今までの終わりと追加するものの始まりが等しい時
+                    if self.pause[len(self.pause)-1][1] == start:
+                        start = self.pause[len(self.pause)-1][0]  # 開始時間を取得
+                        self.pause.pop(-1)  # 最後の要素を削除
+
                 time = [start, end]
                 self.pause.append(time)
 
@@ -120,8 +127,8 @@ def trance_data(pause, outou):  # 情報処理
         end = float(time[1])  # 間の終了じかん
         for i in time_list:
             if start < i and i < end:
-                print(start,end)
-                print(i,end="")
+                print(start, end)
+                print(i, end="")
                 print(outou[i])
                 dic.append(start)  # 間の開始時間を比較基準とする
                 interval += 1
