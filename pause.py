@@ -79,7 +79,7 @@ class Pause:
     def __init__(self, file_num):
         self.pause = []
         self.file_num = file_num
-        self.end_time = 0.0
+        self.marge = False
 
     def read_data(self):
         file_root = '../../katari_info/'
@@ -90,31 +90,31 @@ class Pause:
             files.sort()
             for file in files:
                 self.readPause(file)
-            self.end_time = 0.0  # 一つの01-*が終わったら終了時刻を初期化
+            self.marge = False  # ファイルを跨いだ更新は行わない
 
+        self.pause.sort()
         return self.pause
 
     def readPause(self, file_name):  # 語り側   [間の開始時間：間の終了時間]
         file = open(file_name)  # データ入力
         lines = file.readlines()
-        print(file)
-
-        # ファイルの最初と最後の時間を取得
-        begin = lines[1]
-        begin = begin.split(',')
-        begin = float(begin[1])
-        end = lines[len(lines)-1]
-        end = end.split(',')
-        end = float(end[2].rstrip('\n'))  # 改行の削除
-
-        if self.end_time != 0.0:  # 一番最初のファイルはスルー
-            if begin != self.end_time:
-                print(True)
 
         for data in lines[0:len(lines)]:
             data = data.rstrip('\n')  # 改行の削除
             data = data.split(',')  # ','で分割
-            if data[0] == 'silE' or data[0] == 'silB' or data[0] == 'sp' or data[0] == 'pause':
+            if data[0] == 'silB' and self.marge:  # ファイルを跨いで間をマージ
+                # ファイルを跨いだ時間のmargeのためsilBの終了時間を取得する
+                end = lines[1]
+                end = end.split(',')
+                end = float(end[2].rstrip('\n'))  # 改行の削除
+                # これまでの最終時間をstart
+                start = self.pause[len(self.pause)-1][0]
+
+                time = [start, end]
+                self.pause.append(time)
+                # print(time)
+
+            if data[0] == 'silE' or data[0] == 'sp' or data[0] == 'pause':
                 start = float(data[1:3][0])
                 end = float(data[1:3][1])
 
@@ -125,12 +125,11 @@ class Pause:
                         self.pause.pop(-1)  # 最後の要素を削除
 
                 time = [start, end]
-                print(time)
+                # print(time)
                 self.pause.append(time)
 
-        print(begin, self.end_time)
-        self.end_time = end  # 終了時刻の更新
-        self.pause.sort()
+        if not self.marge:  # Falseの時、次からはマージする
+            self.marge = True
 
         file.close()
 
@@ -146,9 +145,9 @@ def trance_data(pause, outou):  # 情報処理
         end = float(time[1])  # 間の終了じかん
         for i in time_list:
             if start < i and i < end:
-                #print(start, end)
-                #print(i, end="")
-                # print(outou[i])
+                print(start, end)
+                print(i, end="")
+                print(outou[i])
                 dic.append(start)  # 間の開始時間を比較基準とする
                 interval += 1
                 break
