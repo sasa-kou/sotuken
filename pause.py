@@ -98,6 +98,7 @@ class Pause:
     def readPause(self, file_name):  # 語り側   [間の開始時間：間の終了時間]
         file = open(file_name)  # データ入力
         lines = file.readlines()
+        # print(file)
 
         for data in lines[0:len(lines)]:
             data = data.rstrip('\n')  # 改行の削除
@@ -113,6 +114,11 @@ class Pause:
                 time = [start, end]
                 self.pause.append(time)
                 # print(time)
+            elif data[0] == 'silB' and not self.marge:  # ファイルを跨いだらそのまま
+                start = float(data[1:3][0])
+                end = float(data[1:3][1])
+                time = [start, end]
+                self.pause.append(time)
 
             if data[0] == 'silE' or data[0] == 'sp' or data[0] == 'pause':
                 start = float(data[1:3][0])
