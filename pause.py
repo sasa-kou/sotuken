@@ -109,7 +109,7 @@ class Pause:
                 end = float(end[2].rstrip('\n'))  # 改行の削除
                 # これまでの最終時間をstart
                 start = self.pause[len(self.pause)-1][0]
-
+                self.pause.pop(-1)  # 最後の要素を削除
                 time = [start, end]
                 self.pause.append(time)
                 # print(time)
