@@ -1,4 +1,5 @@
 import glob
+import sys
 import os
 import shutil
 from functools import reduce
@@ -169,14 +170,16 @@ def compare(*args):  # 間で開始した応答時間の一致
 
 
 if __name__ == '__main__':
-    ps = Pause('01')
+    file_num = sys.argv[1]
+
+    ps = Pause(file_num)
     pause = ps.read_data()
 
-    ot = Outou('01', 'a')
+    ot = Outou(file_num, 'a')
     outou, outou_label = ot.read_data()
     a_interval, a_dic = trance_data(pause, outou)
 
-    ot = Outou('01', 'b')
+    ot = Outou(file_num, 'b')
     outou, outou_label = ot.read_data()
     b_interval, b_dic = trance_data(pause, outou)
 

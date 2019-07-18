@@ -1,4 +1,5 @@
 import glob
+import sys
 import os
 import shutil
 from functools import reduce
@@ -183,20 +184,22 @@ class Compare:
 
 
 if __name__ == '__main__':
-    kt = Katari('01')
+    file_num = sys.argv[1]
+
+    kt = Katari(file_num)
     katari = kt.read_data()
 
-    ot = Outou('01', 'a')
+    ot = Outou(file_num, 'a')
     outou, outou_label = ot.read_data()
     ot.view()
     a = trance_data(outou, outou_label, katari)
 
-    ot = Outou('01', 'b')
+    ot = Outou(file_num, 'b')
     outou, outou_label = ot.read_data()
     ot.view()
     b = trance_data(outou, outou_label, katari)
 
-    ot = Outou('01', 'c')
+    ot = Outou(file_num, 'c')
     outou, outou_label = ot.read_data()
     ot.view()
     c = trance_data(outou, outou_label, katari)
