@@ -3,6 +3,9 @@ import sys
 import os
 import shutil
 from functools import reduce
+path = 'pauseResult.txt'
+with open(path, mode='w') as f:
+    f.write('')
 
 
 class Outou:
@@ -141,9 +144,9 @@ class Pause:
         file.close()
 
 
-def trance_data(pause, outou):  # 情報処理
+def trance_data(pause, outou, outou_label):  # 情報処理
     interval = 0  # 間で開始した応答数
-    dic = []      # 一致を検知する基準
+    dic = {}      # 一致を検知する基準
     time_list = list(outou.keys())  # 応答の開始時間
     time_list.sort()
 
@@ -152,21 +155,30 @@ def trance_data(pause, outou):  # 情報処理
         end = float(time[1])  # 間の終了じかん
         for i in time_list:
             if start < i and i < end:
-                print(start, end)
-                print(i, end="")
-                print(outou[i])
-                dic.append(start)  # 間の開始時間を比較基準とする
+                # print(start, end)
+                # print(i, end="")
+                # print(outou[i])
+                # 間の開始時間を比較基準とする
+                dic.update({start: {outou[i]: outou_label[i]}})
                 interval += 1
+                with open(path, mode='a') as f:
+                    f.write('間の開始時間：' + str(start))
+                    f.write(' 間の終了時間：' + str(end) + '\n')
+                    f.write(str(dic[start]) + '\n')
                 break
+
+    with open(path, mode='a') as f:
+        f.write('\n')
 
     return interval, dic
 
 
 def compare(*args):  # 間で開始した応答時間の一致
-    comp = reduce(lambda x, y: list(
+    time_list = reduce(lambda x, y: list(
         set(x) & set(y)), args)
+    time_list.sort()
 
-    return len(comp)
+    return len(time_list)
 
 
 if __name__ == '__main__':
@@ -177,11 +189,11 @@ if __name__ == '__main__':
 
     ot = Outou(file_num, 'a')
     outou, outou_label = ot.read_data()
-    a_interval, a_dic = trance_data(pause, outou)
+    a_interval, a_dic = trance_data(pause, outou, outou_label)
 
     ot = Outou(file_num, 'b')
     outou, outou_label = ot.read_data()
-    b_interval, b_dic = trance_data(pause, outou)
+    b_interval, b_dic = trance_data(pause, outou, outou_label)
 
     print('Aの間で開始した応答数', a_interval)
     print('Bの間で開始した応答数', b_interval)
