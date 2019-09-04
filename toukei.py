@@ -217,7 +217,11 @@ if __name__ == '__main__':
     c = trance_data(outou, outou_label, katari)
 
     comp = Compare(katari)
+    print('AB')
     comp.match(a, b)
+    print('AC')
     comp.match(a, c)
+    print('BC')
     comp.match(b, c)
+    print('ABC')
     comp.match(a, b, c)
