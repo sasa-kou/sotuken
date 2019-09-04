@@ -3,6 +3,9 @@ import sys
 import os
 import shutil
 from functools import reduce
+path = 'toukeiResult.txt'
+with open(path, mode='w') as f:
+    f.write('')
 
 
 class Outou:
@@ -156,7 +159,10 @@ class Compare:
             set(x) & set(y)), args)  # 全てのargsに対してset()
         time_list.sort()  # 語り終了時間のリスト
         con = 0
-
+        
+        with open(path, mode='a') as f:
+            f.write('比較結果' + '\n')
+        
         for time in time_list:
             # argsのラベル情報の配列を作成
             tmp = list(map(lambda x: list(x[time].values()), args))
@@ -173,7 +179,13 @@ class Compare:
                 for word in self.word[con:index]:
                     sent += word
                 con = index
-                #print("語り", sent)
+
+                with open(path, mode='a') as f:
+                    f.write("語り" + sent + '\n')
+                    f.write(str(args[0][time]) + '\n')
+                    f.write(str(args[1][time]) + '\n')
+
+                # print("語り", sent)
                 # print(args[0][time])
                 # print(args[1][time])
 
