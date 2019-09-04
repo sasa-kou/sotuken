@@ -182,8 +182,8 @@ class Compare:
 
                 with open(path, mode='a') as f:
                     f.write("語り" + sent + '\n')
-                    f.write(str(args[0][time]) + '\n')
-                    f.write(str(args[1][time]) + '\n')
+                    for word in args:
+                        f.write(str(word[time]) + '\n')
 
                 # print("語り", sent)
                 # print(args[0][time])
