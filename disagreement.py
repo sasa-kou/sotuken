@@ -78,16 +78,17 @@ class Katari:
         self.katari = []
         self.file_num = file_num
 
-    def read_data(self):  # 全ファイルを検索して読み込み
+    def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
         file_root = '../../katari_info/'
-        file_end = '/*.morph'
-
-        files = glob.glob(file_root + self.file_num + file_end)
-        files.sort()
-
-        for file in files:
-            # print(file)
-            self.readKatari(file)
+        big_files = glob.glob(file_root + self.file_num +
+                              '/' + self.file_num + '-*')
+        big_files.sort()
+        for small_file in big_files:
+            files = glob.glob(small_file + '/*.morph')
+            files.sort()
+            for file in files:
+                # print(file)
+                self.readKatari(file)
 
         return self.katari
 
@@ -95,7 +96,7 @@ class Katari:
         file = open(file_name)  # データ入力
         lines = file.readlines()
 
-        for data in lines[0:len(lines)]:
+        for i, data in enumerate(lines[0:len(lines)]):
             data = data.rstrip('\n')  # 改行の削除
             data = data.split(',')  # ','で分割
             num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
@@ -103,19 +104,29 @@ class Katari:
             # 例外処理
             if num == 0:
                 continue
-            elif data[0] == "silB" or data[0] == "silE":
-                continue
-            elif data[0] == "sp" or data[0] == "pause":
-                continue
+            elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
+                word = word = 'pause' + str(i)
+                begin = float(data[1:3][0])
+                end = float(data[1:3][1])
+
+                if len(self.katari) != 0:
+                    last_word = list(self.katari[-1].keys())
+                    last_time = list(self.katari[-1].values())
+                    if 'pause' in last_word[0]:
+                        self.katari.pop(-1)
+                        begin = last_time[0][0]
+                
+                time = [begin, end]
+
             elif data[0] == "(" or data[0] == ")":
                 continue
             elif data[1] == "補助記号":
                 continue
-
-            word = data[0]
-            begin = float(data[num-1])
-            end = float(data[num])
-            time = [begin, end]
+            else:
+                word = data[0]
+                begin = float(data[num-1])
+                end = float(data[num])
+                time = [begin, end]
 
             self.katari.append({word: time})
 
@@ -123,6 +134,7 @@ class Katari:
 
 
 def statistics(katari_info, outou_info):
+    print(katari_info)
     for i, katari in enumerate(katari_info):
         katari_time = list(katari.values())
         start = katari_time[0][0]
@@ -130,9 +142,11 @@ def statistics(katari_info, outou_info):
         for outou_time in outou_info:
             if start <= outou_time and outou_time <= end:
                 katari_info.pop(i-1)
+                #print(katari_info[i-1])
+                
                 break
 
-    print(katari_info)
+    #print(katari_info)
 
 
 if __name__ == '__main__':
