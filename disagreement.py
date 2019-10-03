@@ -141,7 +141,7 @@ def statistics(katari_info, outou_info):
         end = katari_time[0][1]
         for outou_time in outou_info:
             if start <= outou_time and outou_time <= end:
-                popWord = list(katari_info[i-1].keys())
+                popWord = list(katari_info[i-1].keys()) #pop先がpauseなのを防ぐ
                 if 'pause' in popWord[0]:
                     # print('pause',katari_info[i-2])
                     katari_info.pop(i-2)
@@ -150,8 +150,23 @@ def statistics(katari_info, outou_info):
                     katari_info.pop(i-1)
                 break
 
-    print(katari_info)
+    return katari_info
 
+def count(data):
+    wordList = []   #出現する単語を全て保存
+    keyWord = []    #単語の種類を保存
+    for value in data:
+        word = list(value.keys())[0]
+
+        if 'pause' in word:
+            continue
+        
+        wordList.append(word)
+        if word not in keyWord:
+            keyWord.append(word)
+
+    for word in keyWord:
+        print(word, wordList.count(word))
 
 if __name__ == '__main__':
     file_num = sys.argv[1]
@@ -162,4 +177,11 @@ if __name__ == '__main__':
     ot = Outou(file_num, 'a')
     outou_a, outou_label = ot.read_data()
 
-    statistics(katari, outou_a)
+    ot = Outou(file_num, 'b')
+    outou_b, outou_label = ot.read_data()
+
+    result = statistics(katari, outou_a)
+    result = statistics(result, outou_b)
+
+    #print(result)
+    count(result)
