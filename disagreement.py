@@ -76,21 +76,18 @@ class Outou:
 class Katari:
     def __init__(self, file_num):
         self.katari = []
-        self.pause = []
         self.file_num = file_num
-        self.marge = False
 
     def read_data(self):  # 全ファイルを検索して読み込み
         file_root = '../../katari_info/'
-        big_files = glob.glob(file_root + self.file_num +
-                              '/' + self.file_num + '-*')
+        file_end = '/*.morph'
 
-        for small_file in big_files:
-            files = glob.glob(small_file + '/*.morph')
-            files.sort()
-            for file in files:
-                self.readKatari(file)
-            self.marge = False  # ファイルを跨いだ更新は行わない
+        files = glob.glob(file_root + self.file_num + file_end)
+        files.sort()
+
+        for file in files:
+            # print(file)
+            self.readKatari(file)
 
         return self.katari
 
@@ -106,41 +103,14 @@ class Katari:
             # 例外処理
             if num == 0:
                 continue
+            elif data[0] == "silB" or data[0] == "silE":
+                continue
+            elif data[0] == "sp" or data[0] == "pause":
+                continue
             elif data[0] == "(" or data[0] == ")":
                 continue
             elif data[1] == "補助記号":
                 continue
-            elif data[0] == 'silB' and self.marge:  # ファイルを跨いで間をマージ
-                # ファイルを跨いだ時間のmargeのためsilBの終了時間を取得する
-                end = lines[1]
-                end = end.split(',')
-                end = float(end[2].rstrip('\n'))  # 改行の削除
-                # これまでの最終時間をstart
-                start = self.pause[len(self.pause)-1][0]
-                self.pause.pop(-1)  # 最後の要素を削除
-                time = [start, end]
-                self.pause.append(time)
-                # print(time)
-
-            elif data[0] == 'silB' and not self.marge:  # ファイルを跨いだらそのまま
-                start = float(data[1:3][0])
-                end = float(data[1:3][1])
-                time = [start, end]
-                self.pause.append(time)
-
-            if data[0] == 'silE' or data[0] == 'sp' or data[0] == 'pause':
-                start = float(data[1:3][0])
-                end = float(data[1:3][1])
-
-                if len(self.pause) != 0:  # 一番初めは比較対象がないので
-                    # 今までの終わりと追加するものの始まりが等しい時
-                    if self.pause[len(self.pause)-1][1] == start:
-                        start = self.pause[len(self.pause)-1][0]  # 開始時間を取得
-                        self.pause.pop(-1)  # 最後の要素を削除
-
-                time = [start, end]
-                # print(time)
-                self.pause.append(time)
 
             word = data[0]
             begin = float(data[num-1])
@@ -149,10 +119,6 @@ class Katari:
 
             self.katari.append({word: time})
 
-        if not self.marge:  # Falseの時、次からはマージする
-            self.marge = True
-        
-        print(self.pause)
         file.close()
 
 
