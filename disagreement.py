@@ -115,7 +115,7 @@ class Katari:
                     if 'pause' in last_word[0]:
                         self.katari.pop(-1)
                         begin = last_time[0][0]
-                
+
                 time = [begin, end]
 
             elif data[0] == "(" or data[0] == ")":
@@ -134,19 +134,23 @@ class Katari:
 
 
 def statistics(katari_info, outou_info):
-    print(katari_info)
+    # print(katari_info)
     for i, katari in enumerate(katari_info):
         katari_time = list(katari.values())
         start = katari_time[0][0]
         end = katari_time[0][1]
         for outou_time in outou_info:
             if start <= outou_time and outou_time <= end:
-                katari_info.pop(i-1)
-                #print(katari_info[i-1])
-                
+                popWord = list(katari_info[i-1].keys())
+                if 'pause' in popWord[0]:
+                    # print('pause',katari_info[i-2])
+                    katari_info.pop(i-2)
+                else:
+                    # print('def',katari_info[i-1])
+                    katari_info.pop(i-1)
                 break
 
-    #print(katari_info)
+    print(katari_info)
 
 
 if __name__ == '__main__':
