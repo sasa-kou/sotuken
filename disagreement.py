@@ -3,7 +3,9 @@ import sys
 import os
 import shutil
 from functools import reduce
-
+path = 'disagreementResult.txt'
+with open(path, mode='w') as f:
+    f.write('')
 
 class Outou:
     def __init__(self, file_num, file_name):
@@ -166,7 +168,9 @@ def count(data):
             keyWord.append(word)
 
     for word in keyWord:
-        print(word, wordList.count(word))
+        with open(path, mode='a') as f:
+            f.write(word + ': ' + str(wordList.count(word)) + '\n')
+        # print(word, wordList.count(word))
 
 if __name__ == '__main__':
     file_num = sys.argv[1]
