@@ -85,16 +85,17 @@ class Katari:
         self.katari = {}
         self.file_num = file_num
 
-    def read_data(self):  # 全ファイルを検索して読み込み
+    def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
         file_root = '../../katari_info/'
-        file_end = '/*.morph'
-
-        files = glob.glob(file_root + self.file_num + file_end)
-        files.sort()
-
-        for file in files:
-            # print(file)
-            self.readKatari(file)
+        big_files = glob.glob(file_root + self.file_num +
+                              '/' + self.file_num + '-*')
+        big_files.sort()
+        for small_file in big_files:
+            files = glob.glob(small_file + '/*.morph')
+            files.sort()
+            for file in files:
+                # print(file)
+                self.readKatari(file)
 
         return self.katari
 
