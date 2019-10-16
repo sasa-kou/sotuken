@@ -7,27 +7,32 @@ path = 'toukeiResult.txt'
 with open(path, mode='w') as f:
     f.write('')
 
+fileArray = [
+    '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
+]
+testData_num = ['1', '2', '3', '4', '5', '6', '7']
+
 
 class Outou:
-    def __init__(self, file_num, file_name):
+    def __init__(self, file_name):
         self.outou = {}
         self.outou_label = {}
         self.outou_count = 0
-        self.file_num = file_num
         self.file_name = file_name
 
     def read_data(self):  # 全ファイルを検索して読み込み
         file_root = '../../outouwithlabel_camui/outouwithlabel_camui/'
         file_end = '/*.morph'
 
-        files = glob.glob(file_root + self.file_num +
-                          '/' + self.file_name + file_end)
-        files.sort()
-
-        for file in files:
-            # print(file)
-            self.readOutou(file)
-
+        for file_index in fileArray:
+            files = glob.glob(file_root + file_index +
+                              '/' + self.file_name + '/')
+            for file in files:
+                for index in testData_num:
+                    targetFileList = glob.glob(file + index + file_end)
+                    targetFileList.sort()
+                    for targetFile in targetFileList:
+                        self.readOutou(targetFile)
         return self.outou, self.outou_label
 
     def readOutou(self, file_name):  # 語り手側  {語り終了時間:言葉}
@@ -81,21 +86,23 @@ class Outou:
 
 
 class Katari:
-    def __init__(self, file_num):
+    def __init__(self):
         self.katari = {}
-        self.file_num = file_num
 
     def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
         file_root = '../../katari_info/'
-        big_files = glob.glob(file_root + self.file_num +
-                              '/' + self.file_num + '-*')
-        big_files.sort()
-        for small_file in big_files:
-            files = glob.glob(small_file + '/*.morph')
-            files.sort()
+        file_end = '/*.morph'
+
+        for file_index in fileArray:
+            files = glob.glob(file_root + file_index + '/')
             for file in files:
-                # print(file)
-                self.readKatari(file)
+                for index in testData_num:
+                    bigFiles = glob.glob(file + index + '/*')
+                    for bigFile in bigFiles:
+                        targetFileList = glob.glob(bigFile + file_end)
+                        targetFileList.sort()
+                        for targetFile in targetFileList:
+                            self.readKatari(targetFile)
 
         return self.katari
 
@@ -160,10 +167,10 @@ class Compare:
             set(x) & set(y)), args)  # 全てのargsに対してset()
         time_list.sort()  # 語り終了時間のリスト
         con = 0
-        
+
         with open(path, mode='a') as f:
             f.write('比較結果' + '\n')
-        
+
         for time in time_list:
             # argsのラベル情報の配列を作成
             tmp = list(map(lambda x: list(x[time].values()), args))
@@ -196,27 +203,47 @@ class Compare:
             print(word, data.count(word))
 
 
+def countKatari(katari):
+    filePath = 'katariCount.txt'
+    with open(filePath, mode='w') as f:
+        f.write('')
+
+    wordList = []  # 出現する単語を全て保存
+    keyWord = []  # 単語の種類を保存
+    data = list(katari.values())
+    for word in data:
+        wordList.append(word)
+        if word not in keyWord:
+            keyWord.append(word)
+
+    for word in keyWord:
+        with open(filePath, mode='a') as f:
+            f.write(word + ': ' + str(wordList.count(word)) + '\n')
+
+
 if __name__ == '__main__':
-    file_num = sys.argv[1]
-
-    kt = Katari(file_num)
+    kt = Katari()
     katari = kt.read_data()
+    countKatari(katari)
 
-    ot = Outou(file_num, 'a')
+    """
+    ot = Outou('a')
     outou, outou_label = ot.read_data()
     ot.view()
     a = trance_data(outou, outou_label, katari)
 
-    ot = Outou(file_num, 'b')
+    ot = Outou('b')
     outou, outou_label = ot.read_data()
     ot.view()
     b = trance_data(outou, outou_label, katari)
 
-    ot = Outou(file_num, 'c')
+    ot = Outou('c')
     outou, outou_label = ot.read_data()
     ot.view()
     c = trance_data(outou, outou_label, katari)
+    """
 
+    """
     comp = Compare(katari)
     print('AB')
     comp.match(a, b)
@@ -226,3 +253,4 @@ if __name__ == '__main__':
     comp.match(b, c)
     print('ABC')
     comp.match(a, b, c)
+    """
