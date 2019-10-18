@@ -218,7 +218,7 @@ def countKatari(katari):
 
     for word in keyWord:
         with open(filePath, mode='a') as f:
-            f.write(word + ': ' + str(wordList.count(word)) + '\n')
+            f.write(word + ':' + str(wordList.count(word)) + '\n')
 
 
 if __name__ == '__main__':

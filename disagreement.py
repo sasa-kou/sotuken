@@ -179,7 +179,7 @@ def count(data):
 
     for word in keyWord:
         with open(path, mode='a') as f:
-            f.write(word + ': ' + str(wordList.count(word)) + '\n')
+            f.write(word + ':' + str(wordList.count(word)) + '\n')
         # print(word, wordList.count(word))
 
 
