@@ -133,6 +133,52 @@ class Katari:
 
         file.close()
 
+class Hinshi:
+    def __init__(self):
+        self.hinshi = []
+
+    def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
+        file_root = '../../katari_info/'
+        file_end = '/*.morph'
+
+        for file_index in fileArray:
+            files = glob.glob(file_root + file_index + '/')
+            for file in files:
+                for index in testData_num:
+                    bigFiles = glob.glob(file + index + '/*')
+                    for bigFile in bigFiles:
+                        targetFileList = glob.glob(bigFile + file_end)
+                        targetFileList.sort()
+                        for targetFile in targetFileList:
+                            self.readHinshi(targetFile)
+
+        return self.hinshi
+
+    def readHinshi(self, file_name):  # 語り手側  {語り終了時間:言葉}
+        file = open(file_name)  # データ入力
+        lines = file.readlines()
+
+        for data in lines[0:len(lines)]:
+            data = data.rstrip('\n')  # 改行の削除
+            data = data.split(',')  # ','で分割
+            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
+
+            # 例外処理
+            if num == 0:
+                continue
+            elif data[0] == "silB" or data[0] == "silE":
+                continue
+            elif data[0] == "sp" or data[0] == "pause":
+                continue
+            elif data[0] == "(" or data[0] == ")":
+                continue
+            elif data[1] == "補助記号":
+                continue
+
+            word = data[1]
+            self.hinshi.append(word)
+
+        file.close()
 
 def trance_data(outou, outou_label, katari):  # 語りと応答の情報を解析しやすいように処理
     dic = {}
@@ -220,11 +266,29 @@ def countKatari(katari):
         with open(filePath, mode='a') as f:
             f.write(word + ':' + str(wordList.count(word)) + '\n')
 
+def countHinshi(hinshi):
+    keyWord = []  # 単語の種類を保存
+
+    for word in hinshi:
+        if word not in keyWord:
+            keyWord.append(word)
+
+    for word in keyWord:
+        print(word, hinshi.count(word))
+
 
 if __name__ == '__main__':
+    hi = Hinshi()
+    hinshi = hi.read_data()
+    
+    countHinshi(hinshi)
+
+
+    """
     kt = Katari()
     katari = kt.read_data()
     countKatari(katari)
+    """
 
     """
     ot = Outou('a')
