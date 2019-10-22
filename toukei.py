@@ -133,6 +133,7 @@ class Katari:
 
         file.close()
 
+
 class Hinshi:
     def __init__(self):
         self.hinshi = []
@@ -179,6 +180,7 @@ class Hinshi:
             self.hinshi.append(word)
 
         file.close()
+
 
 def trance_data(outou, outou_label, katari):  # 語りと応答の情報を解析しやすいように処理
     dic = {}
@@ -266,6 +268,7 @@ def countKatari(katari):
         with open(filePath, mode='a') as f:
             f.write(word + ':' + str(wordList.count(word)) + '\n')
 
+
 def countHinshi(hinshi):
     keyWord = []  # 単語の種類を保存
 
@@ -280,9 +283,8 @@ def countHinshi(hinshi):
 if __name__ == '__main__':
     hi = Hinshi()
     hinshi = hi.read_data()
-    
-    countHinshi(hinshi)
 
+    countHinshi(hinshi)
 
     """
     kt = Katari()
