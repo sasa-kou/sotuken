@@ -7,25 +7,33 @@ path = 'pauseResult.txt'
 with open(path, mode='w') as f:
     f.write('')
 
+fileArray = [
+    '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
+]
+#testData_num = ['1', '2', '3', '4', '5', '6', '7']
+testData_num = ['1']
+
 
 class Outou:
-    def __init__(self, file_num, file_name):
+    def __init__(self, file_name):
         self.outou = {}
         self.outou_label = {}
         self.outou_count = 0
-        self.file_num = file_num
         self.file_name = file_name
 
     def read_data(self):  # 全ファイルを検索して読み込み
         file_root = '../../outouwithlabel_camui/outouwithlabel_camui/'
         file_end = '/*.morph'
 
-        files = glob.glob(file_root + self.file_num +
-                          '/' + self.file_name + file_end)
-        files.sort()
-
-        for file in files:
-            self.readOutou(file)
+        for file_index in fileArray:
+            files = glob.glob(file_root + file_index +
+                              '/' + self.file_name + '/')
+            for file in files:
+                for index in testData_num:
+                    targetFileList = glob.glob(file + index + file_end)
+                    targetFileList.sort()
+                    for targetFile in targetFileList:
+                        self.readOutou(targetFile)
 
         return self.outou, self.outou_label
 
@@ -80,29 +88,32 @@ class Outou:
 
 
 class Pause:
-    def __init__(self, file_num):
+    def __init__(self):
         self.pause = []
-        self.file_num = file_num
         self.marge = False
+        self.length = []
 
     def read_data(self):
         file_root = '../../katari_info/'
-        big_files = glob.glob(file_root + self.file_num +
-                              '/' + self.file_num + '-*')
-        for small_file in big_files:
-            files = glob.glob(small_file + '/*.morph')
-            files.sort()
-            for file in files:
-                self.readPause(file)
-            self.marge = False  # ファイルを跨いだ更新は行わない
+        file_end = '/*.morph'
 
-        self.pause.sort()
+        for file_index in fileArray:
+            files = glob.glob(file_root + file_index + '/')
+            for file in files:
+                for index in testData_num:
+                    bigFiles = glob.glob(file + index + '/*')
+                    for bigFile in bigFiles:
+                        targetFileList = glob.glob(bigFile + file_end)
+                        targetFileList.sort()
+                        for targetFile in targetFileList:
+                            self.readPause(targetFile)
+                        self.marge = False  # ファイルを跨いだ更新は行わない
+
         return self.pause
 
     def readPause(self, file_name):  # 語り側   [間の開始時間：間の終了時間]
         file = open(file_name)  # データ入力
         lines = file.readlines()
-        # print(file)
 
         for data in lines[0:len(lines)]:
             data = data.rstrip('\n')  # 改行の削除
@@ -117,11 +128,10 @@ class Pause:
                 self.pause.pop(-1)  # 最後の要素を削除
                 time = [start, end]
                 self.pause.append(time)
-                # print(time)
             elif data[0] == 'silB' and not self.marge:  # ファイルを跨いだらそのまま
                 start = float(data[1:3][0])
                 end = float(data[1:3][1])
-                time = [start, end]
+                time = [start, end]         
                 self.pause.append(time)
 
             if data[0] == 'silE' or data[0] == 'sp' or data[0] == 'pause':
@@ -135,7 +145,6 @@ class Pause:
                         self.pause.pop(-1)  # 最後の要素を削除
 
                 time = [start, end]
-                # print(time)
                 self.pause.append(time)
 
         if not self.marge:  # Falseの時、次からはマージする
@@ -182,16 +191,17 @@ def compare(*args):  # 間で開始した応答時間の一致
 
 
 if __name__ == '__main__':
-    file_num = sys.argv[1]
-
-    ps = Pause(file_num)
+    ps = Pause()
     pause = ps.read_data()
 
-    ot = Outou(file_num, 'a')
+    print(pause)
+    """
+
+    ot = Outou('a')
     outou, outou_label = ot.read_data()
     a_interval, a_dic = trance_data(pause, outou, outou_label)
 
-    ot = Outou(file_num, 'b')
+    ot = Outou('b')
     outou, outou_label = ot.read_data()
     b_interval, b_dic = trance_data(pause, outou, outou_label)
 
@@ -199,3 +209,4 @@ if __name__ == '__main__':
     print('Bの間で開始した応答数', b_interval)
 
     print('ABの一致', compare(a_dic, b_dic))
+    """
