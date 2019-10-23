@@ -84,6 +84,25 @@ class Outou:
         # 応答数を表示
         print(self.file_name, len(self.outou))
 
+    def trance_data(self, katari):  # 語りと応答の情報を解析しやすいように処理
+        dic = {}
+        time_list = list(self.outou.keys())  # 時間情報を取得
+        tmp_list = list(katari.keys())
+        time_list.extend(tmp_list)  # 二つを結合しソート
+        time_list.sort()
+
+        for i in time_list:
+            if i in katari:
+                time = i  # 時間情報の退避
+            elif i in self.outou:
+                # 比較用
+                # {'語り終了時間：{応答側：ラベル}}
+                dic.update({time: {self.outou[i]: self.outou_label[i]}})
+            else:
+                print('エラー：' + self.outou[i] + self.outou_label[i])
+
+        return dic
+
 
 class Katari:
     def __init__(self):
@@ -182,26 +201,6 @@ class Hinshi:
         file.close()
 
 
-def trance_data(outou, outou_label, katari):  # 語りと応答の情報を解析しやすいように処理
-    dic = {}
-    time_list = list(outou.keys())  # 時間情報を取得
-    tmp_list = list(katari.keys())
-    time_list.extend(tmp_list)  # 二つを結合しソート
-    time_list.sort()
-
-    for i in time_list:
-        if i in katari:
-            time = i  # 時間情報の退避
-        elif i in outou:
-            # 比較用
-            # {'語り終了時間：{応答側：ラベル}}
-            dic.update({time: {outou[i]: outou_label[i]}})
-        else:
-            print('エラー：' + outou[i] + outou_label[i])
-
-    return dic
-
-
 class Compare:
     def __init__(self, katari):
         self.katari = katari
@@ -281,33 +280,31 @@ def countHinshi(hinshi):
 
 
 if __name__ == '__main__':
+    """
     hi = Hinshi()
     hinshi = hi.read_data()
 
     countHinshi(hinshi)
-
     """
+
     kt = Katari()
     katari = kt.read_data()
-    countKatari(katari)
-    """
+    # countKatari(katari)
 
-    """
     ot = Outou('a')
     outou, outou_label = ot.read_data()
     ot.view()
-    a = trance_data(outou, outou_label, katari)
+    a = ot.trance_data(katari)
 
     ot = Outou('b')
     outou, outou_label = ot.read_data()
     ot.view()
-    b = trance_data(outou, outou_label, katari)
+    b = ot.trance_data(katari)
 
     ot = Outou('c')
     outou, outou_label = ot.read_data()
     ot.view()
-    c = trance_data(outou, outou_label, katari)
-    """
+    c = ot.trance_data(katari)
 
     """
     comp = Compare(katari)
