@@ -19,6 +19,8 @@ class Outou:
         self.outou_label = {}
         self.outou_count = 0
         self.file_name = file_name
+        self.timeArray = []
+        self.time = 0
 
     def read_data(self):  # 全ファイルを検索して読み込み
         file_root = '../../outouwithlabel_camui/outouwithlabel_camui/'
@@ -33,7 +35,13 @@ class Outou:
                     targetFileList.sort()
                     for targetFile in targetFileList:
                         self.readOutou(targetFile)
-        return self.outou, self.outou_label
+                    if len(self.timeArray) == 0:
+                        print("file not found", file, index)
+                    else:
+                        self.time = round(
+                            self.time + (self.timeArray[1] - self.timeArray[0]), 2)
+                    self.timeArray = []  # 時間情報の初期化
+        return self.outou, self.outou_label, self.time
 
     def readOutou(self, file_name):  # 語り手側  {語り終了時間:言葉}
         file = open(file_name)  # データ入力
@@ -49,8 +57,21 @@ class Outou:
             if num == 0:
                 tmp_str = ""
                 continue
-            elif data[0] == "silB" or data[0] == "silE":
-                tmp_str = ""
+            elif data[0] == "silB":
+                begin = float(data[num-1])  # 開始時刻の取得
+                if len(self.timeArray) == 0:
+                    self.timeArray.append(begin)
+                else:
+                    if self.timeArray[0] > begin:
+                        self.timeArray[0] = begin
+                continue
+            elif data[0] == 'silE':
+                end = float(data[num])
+                if len(self.timeArray) == 1:
+                    self.timeArray.append(end)
+                else:
+                    if self.timeArray[1] < end:
+                        self.timeArray[1] = end
                 continue
             elif data[0] == "sp" or data[0] == "pause":
                 tmp_str = ""
@@ -82,7 +103,9 @@ class Outou:
 
     def view(self):
         # 応答数を表示
-        print(self.file_name, len(self.outou))
+        print("応答の個数：", self.file_name, len(self.outou))
+        print("応答の総時間：", self.time)
+        print("1秒あたりの応答数", len(self.outou) / (self.time * 1000))
 
     def trance_data(self, katari):  # 語りと応答の情報を解析しやすいように処理
         dic = {}
@@ -292,17 +315,17 @@ if __name__ == '__main__':
     # countKatari(katari)
 
     ot = Outou('a')
-    outou, outou_label = ot.read_data()
+    outou, outou_label, time_a = ot.read_data()
     ot.view()
     a = ot.trance_data(katari)
 
     ot = Outou('b')
-    outou, outou_label = ot.read_data()
+    outou, outou_label, time_b = ot.read_data()
     ot.view()
     b = ot.trance_data(katari)
 
     ot = Outou('c')
-    outou, outou_label = ot.read_data()
+    outou, outou_label, time_c = ot.read_data()
     ot.view()
     c = ot.trance_data(katari)
 
