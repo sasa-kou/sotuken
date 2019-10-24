@@ -27,12 +27,11 @@ class Outou:
         for file_index in fileArray:
             files = glob.glob(file_root + file_index +
                               '/' + self.file_name + '/')
-            for file in files:
-                for index in testData_num:
-                    targetFileList = glob.glob(file + index + file_end)
-                    targetFileList.sort()
-                    for targetFile in targetFileList:
-                        self.readOutou(targetFile)
+            for index in testData_num:
+                targetFileList = glob.glob(files[0] + index + file_end)
+                targetFileList.sort()
+                for targetFile in targetFileList:
+                    self.readOutou(targetFile)
 
         return self.outou, self.outou_label
 
@@ -92,14 +91,13 @@ class KatariPause:
 
         for file_index in fileArray:
             files = glob.glob(file_root + file_index + '/')
-            for file in files:
-                for index in testData_num:
-                    bigFiles = glob.glob(file + index + '/*')
-                    for bigFile in bigFiles:
-                        targetFileList = glob.glob(bigFile + file_end)
-                        targetFileList.sort()
-                        for targetFile in targetFileList:
-                            self.readKatari(targetFile)
+            for index in testData_num:
+                bigFiles = glob.glob(files[0] + index + '/*')
+                for bigFile in bigFiles:
+                    targetFileList = glob.glob(bigFile + file_end)
+                    targetFileList.sort()
+                    for targetFile in targetFileList:
+                        self.readKatari(targetFile)
 
         return self.katari
 
