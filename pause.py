@@ -16,7 +16,6 @@ testData_num = ['1', '2', '3', '4', '5', '6', '7']
 class Outou:
     def __init__(self, file_name):
         self.outou = {}
-        self.tmpOutou = {}
         self.outou_label = {}
         self.outou_compare = {}
         self.file_name = file_name
@@ -35,10 +34,10 @@ class Outou:
                     self.readOutou(targetFile)
 
                 num = file_index + '-' + index
-                self.outou_compare.update({num: self.tmpOutou})
-                self.tmpOutou = {}
+                self.outou_compare.update({num: self.outou})
+                self.outou = {}
 
-        return self.outou, self.outou_label, self.outou_compare
+        return self.outou_label, self.outou_compare
 
     def readOutou(self, file_name):  # 語り手側  {語り終了時間:言葉}
         file = open(file_name)  # データ入力
@@ -78,7 +77,6 @@ class Outou:
                 # print(word, label, begin)
 
                 self.outou.update({begin: word})
-                self.tmpOutou.update({begin: word})
                 self.outou_label.update({begin: label})
 
             else:
@@ -102,7 +100,6 @@ class Pause:
         self.pause = []
         self.marge = False
         self.length = []  # 200msより、0が短く、1が長い
-        self.tmpPause = []
         self.pauseCompare = {}
 
     def read_data(self):
@@ -119,11 +116,11 @@ class Pause:
                     for targetFile in targetFileList:
                         self.readPause(targetFile)
                     num = file_index + '-' + index
-                    self.pauseCompare.update({num: self.tmpPause})
-                    self.tmpPause = []
+                    self.pauseCompare.update({num: self.pause})
+                    self.pause = []
                     self.marge = False  # ファイルを跨いだ更新は行わない
 
-        return self.pause, self.pauseCompare
+        return self.pauseCompare
 
     def readPause(self, file_name):  # 語り側   [間の開始時間：間の終了時間]
         file = open(file_name)  # データ入力
@@ -140,10 +137,8 @@ class Pause:
                 # これまでの最終時間をstart
                 start = self.pause[len(self.pause)-1][0]
                 self.pause.pop(-1)  # 最後の要素を削除
-                self.tmpPause.pop(-1)
                 time = [start, end]
                 self.pause.append(time)
-                self.tmpPause.append(time)
                 if round(end-start, 2) >= 0.2:
                     self.length.append(1)
                 else:
@@ -153,7 +148,6 @@ class Pause:
                 end = float(data[1:3][1])
                 time = [start, end]
                 self.pause.append(time)
-                self.tmpPause.append(time)
                 if round(end-start, 2) >= 0.2:
                     self.length.append(1)
                 else:
@@ -168,10 +162,8 @@ class Pause:
                     if self.pause[len(self.pause)-1][1] == start:
                         start = self.pause[len(self.pause)-1][0]  # 開始時間を取得
                         self.pause.pop(-1)  # 最後の要素を削除
-                        self.tmpPause.pop(-1)
                 time = [start, end]
                 self.pause.append(time)
-                self.tmpPause.append(time)
                 if round(end-start, 2) >= 0.2:
                     self.length.append(1)
                 else:
@@ -206,69 +198,21 @@ def trance_data(pause, outou):
 
     return interval
 
-
-def trance_dataX(pause, outou, outou_label):  # 情報処理
-    interval = 0  # 間で開始した応答数
-    dic = {}      # 一致を検知する基準
-    time_list = list(outou.keys())  # 応答の開始時間
-    time_list.sort()
-
-    for time in pause:
-        start = float(time[0])  # 間の開始時間
-        end = float(time[1])  # 間の終了じかん
-        for i in time_list:
-            if start < i and i < end:
-                # print(start, end)
-                # print(i, end="")
-                # print(outou[i])
-                # 間の開始時間を比較基準とする
-                dic.update({start: {outou[i]: outou_label[i]}})
-                interval += 1
-                with open(path, mode='a') as f:
-                    f.write('間の開始時間：' + str(start))
-                    f.write(' 間の終了時間：' + str(end) + '\n')
-                    f.write(str(dic[start]) + '\n')
-                break
-
-    with open(path, mode='a') as f:
-        f.write('\n')
-
-    return interval, dic
-
-
-def compare(*args):  # 間で開始した応答時間の一致
-    time_list = reduce(lambda x, y: list(
-        set(x) & set(y)), args)
-    time_list.sort()
-
-    return len(time_list)
-
-
 if __name__ == '__main__':
     ps = Pause()
-    pause, pauseCompare = ps.read_data()
+    pause = ps.read_data()
     ps.countLength()
 
     ot = Outou('a')
-    outou_a, outou_a_label, outou_a_compare = ot.read_data()
+    outou_a_label, outou_a = ot.read_data()
     num = ot.count()
     print('応答数：', num)
-    a_interval, a_dic = trance_dataX(pause, outou_a, outou_a_label)
-    interval_a = trance_data(pauseCompare, outou_a_compare)
-    print(interval_a)
-    print(a_interval)
+    interval_a = trance_data(pause, outou_a)
+    print('間での応答数：',interval_a)
 
     ot = Outou('b')
-    outou_b, outou_b_label, outou_b_compare = ot.read_data()
-    #b_interval, b_dic = trance_data(pause, outou_b, outou_b_label)
-"""
-    print('A')
-    print('間で開始した応答数：', a_interval)
-    print('全体の応答に対する間で開始した応答の割合：', a_interval/len(outou_a)*100, ' %',)
-
-    print('B')
-    print('間で開始した応答数：', b_interval)
-    print('全体の応答に対する間で開始した応答の割合：', b_interval/len(outou_b)*100, ' %')
-
-    print('ABの一致', compare(a_dic, b_dic))
-"""
+    outou_b_label, outou_b = ot.read_data()
+    num = ot.count()
+    print('応答数：', num)
+    interval_b = trance_data(pause, outou_b)
+    print('間での応答数：',interval_b)
