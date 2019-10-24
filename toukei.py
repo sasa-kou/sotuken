@@ -17,7 +17,7 @@ class Outou:
     def __init__(self, file_name):
         self.outou = {}
         self.outou_label = {}
-        self.outou_count = 0
+        self.outou_compare = {}
         self.file_name = file_name
 
     def read_data(self):  # 全ファイルを検索して読み込み
@@ -33,7 +33,11 @@ class Outou:
                 for targetFile in targetFileList:
                     self.readOutou(targetFile)
 
-        return self.outou, self.outou_label
+                num = file_index + '-' + index
+                self.outou_compare.update({num: self.outou})
+                self.outou = {}
+
+        return self.outou_compare, self.outou_label
 
     def readOutou(self, file_name):  # 語り手側  {語り終了時間:言葉}
         file = open(file_name)  # データ入力
@@ -49,10 +53,7 @@ class Outou:
             if num == 0:
                 tmp_str = ""
                 continue
-            elif data[0] == "silB":
-                tmp_str = ""
-                continue
-            elif data[0] == 'silE':
+            elif data[0] == "silB" or data[0] == "silE":
                 tmp_str = ""
                 continue
             elif data[0] == "sp" or data[0] == "pause":
@@ -73,7 +74,7 @@ class Outou:
                 word = tmp_str+word
                 label = data[num].lstrip('label=')  # labelの取得
                 begin = float(data[num-2])  # 開始時刻の取得
-                #print(word, label, begin)
+                # print(word, label, begin)
 
                 self.outou.update({begin: word})
                 self.outou_label.update({begin: label})
@@ -83,33 +84,21 @@ class Outou:
 
         file.close()
 
-    def view(self):
+    def count(self):
         # 応答数を表示
-        print("応答の個数：", self.file_name, len(self.outou))
+        count = 0
+        for index in list(self.outou_compare.keys()):
+            # print(index)
+            # print(len(self.outou_a_compare[index]))
+            count = count + len(self.outou_compare[index])
 
-    def trance_data(self, katari):  # 語りと応答の情報を解析しやすいように処理
-        dic = {}
-        time_list = list(self.outou.keys())  # 時間情報を取得
-        tmp_list = list(katari.keys())
-        time_list.extend(tmp_list)  # 二つを結合しソート
-        time_list.sort()
-
-        for i in time_list:
-            if i in katari:
-                time = i  # 時間情報の退避
-            elif i in self.outou:
-                # 比較用
-                # {'語り終了時間：{応答側：ラベル}}
-                dic.update({time: {self.outou[i]: self.outou_label[i]}})
-            else:
-                print('エラー：' + self.outou[i] + self.outou_label[i])
-
-        return dic
+        return count
 
 
 class Katari:
     def __init__(self):
         self.katari = {}
+        self.katari_compare = {}
         self.timeArray = []
         self.time = 0
 
@@ -129,8 +118,11 @@ class Katari:
                     self.time = round(
                         self.time + (self.timeArray[1] - self.timeArray[0]), 2)
                     self.timeArray = []  # 時間情報の初期化
+                    num = file_index + '-' + index
+                    self.katari_compare.update({num: self.katari})
+                    self.katari = {}
 
-        return self.katari, self.time
+        return self.katari_compare, self.time
 
     def readKatari(self, file_name):  # 語り手側  {語り終了時間:言葉}
         file = open(file_name)  # データ入力
@@ -313,32 +305,20 @@ if __name__ == '__main__':
     print("語り総時間：", time)
     # countKatari(katari)
 
+    print('A')
     ot = Outou('a')
     outou, outou_label = ot.read_data()
-    ot.view()
-    print("１秒間あたりの応答数：", len(outou)/time)
-    a = ot.trance_data(katari)
+    print('応答の個数：',ot.count())
+    print("１秒間あたりの応答数：", ot.count()/time)
 
+    print('B')
     ot = Outou('b')
     outou, outou_label = ot.read_data()
-    ot.view()
-    print("１秒間あたりの応答数：", len(outou)/time)
-    b = ot.trance_data(katari)
+    print('応答の個数：',ot.count())
+    print("１秒間あたりの応答数：", ot.count()/time)
 
+    print('C')
     ot = Outou('c')
     outou, outou_label = ot.read_data()
-    ot.view()
-    print("１秒間あたりの応答数：", len(outou)/time)
-    c = ot.trance_data(katari)
-
-    """
-    comp = Compare(katari)
-    print('AB')
-    comp.match(a, b)
-    print('AC')
-    comp.match(a, c)
-    print('BC')
-    comp.match(b, c)
-    print('ABC')
-    comp.match(a, b, c)
-    """
+    print('応答の個数：',ot.count())
+    print("１秒間あたりの応答数：", ot.count()/time)
