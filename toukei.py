@@ -118,9 +118,9 @@ class Katari:
                     self.time = round(
                         self.time + (self.timeArray[1] - self.timeArray[0]), 2)
                     self.timeArray = []  # 時間情報の初期化
-                    num = file_index + '-' + index
-                    self.katari_compare.update({num: self.katari})
-                    self.katari = {}
+                num = file_index + '-' + index
+                self.katari_compare.update({num: self.katari})
+                self.katari = {}
 
         return self.katari_compare, self.time
 

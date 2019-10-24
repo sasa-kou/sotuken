@@ -17,7 +17,7 @@ class Outou:
     def __init__(self, file_name):
         self.outou = {}
         self.outou_label = {}
-        self.outou_count = 0
+        self.outou_compare = {}
         self.file_name = file_name
 
     def read_data(self):  # 全ファイルを検索して読み込み
@@ -33,9 +33,13 @@ class Outou:
                 for targetFile in targetFileList:
                     self.readOutou(targetFile)
 
-        return self.outou, self.outou_label
+                num = file_index + '-' + index
+                self.outou_compare.update({num: self.outou})
+                self.outou = {}
 
-    def readOutou(self, file_name):  # 応答側  {応答開始時間:言葉}
+        return self.outou_compare, self.outou_label
+
+    def readOutou(self, file_name):  # 語り手側  {語り終了時間:言葉}
         file = open(file_name)  # データ入力
         lines = file.readlines()
         tmp_str = ""
@@ -70,7 +74,7 @@ class Outou:
                 word = tmp_str+word
                 label = data[num].lstrip('label=')  # labelの取得
                 begin = float(data[num-2])  # 開始時刻の取得
-                #print(word, label, begin)
+                # print(word, label, begin)
 
                 self.outou.update({begin: word})
                 self.outou_label.update({begin: label})
@@ -84,6 +88,7 @@ class Outou:
 class KatariPause:
     def __init__(self):
         self.katari = []
+        self.katari_compare = {}
 
     def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
         file_root = '../../katari_info/'
@@ -98,8 +103,11 @@ class KatariPause:
                     targetFileList.sort()
                     for targetFile in targetFileList:
                         self.readKatari(targetFile)
+                num = file_index + '-' + index
+                self.katari_compare.update({num: self.katari})
+                self.katari = []
 
-        return self.katari
+        return self.katari_compare
 
     def readKatari(self, file_name):  # 語り手側  {{語り開始時間:語り終了時間}:言葉}
         file = open(file_name)  # データ入力
@@ -114,7 +122,7 @@ class KatariPause:
             if num == 0:
                 continue
             elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
-                word = word = 'pause' + str(i)
+                word = 'pause' + str(i)
                 begin = float(data[1:3][0])
                 end = float(data[1:3][1])
 
@@ -143,42 +151,54 @@ class KatariPause:
 
 
 def statistics(katari_info, outou_info):
-    # print(katari_info)
-    for i, katari in enumerate(katari_info):
-        katari_time = list(katari.values())
-        start = katari_time[0][0]
-        end = katari_time[0][1]
-        for outou_time in outou_info:
-            if start <= outou_time and outou_time <= end:
-                popWord = list(katari_info[i-1].keys())  # pop先がpauseなのを防ぐ
-                if 'pause' in popWord[0]:
-                    # print('pause',katari_info[i-2])
-                    katari_info.pop(i-2)
-                else:
-                    # print('def',katari_info[i-1])
-                    katari_info.pop(i-1)
-                break
+    for index in list(katari_info.keys()):
+        for katari in katari_info[index]:
+            katari_time = list(katari.values())
+            start = katari_time[0][0]
+            end = katari_time[0][1]
+            for outou_time in outou_info[index]:
+                if start <= outou_time and outou_time < end:
+                    num = katari_info[index].index(katari) - 1
+                    popWord = list(katari_info[index][num].keys())
+                    if 'pause' in popWord[0]:    # pop先がpauseなのを防ぐ
+                        # print('pause', katari_info[index][num-1])
+                        # print(outou_info[index][outou_time], outou_time)
+                        katari_info[index].pop(num-1)
+                    else:
+                        # print('def', katari_info[index][num])
+                        # print(outou_info[index][outou_time], outou_time)
+                        katari_info[index].pop(num)
+                    break
 
     return katari_info
 
 
 def count(data):
+    result = {}
+    answer = []
     wordList = []  # 出現する単語を全て保存
     keyWord = []  # 単語の種類を保存
-    for value in data:
-        word = list(value.keys())[0]
+    for index in list(data.keys()):
+        for value in data[index]:
+            word = list(value.keys())[0]
 
-        if 'pause' in word:
-            continue
+            if 'pause' in word:
+                continue
 
-        wordList.append(word)
-        if word not in keyWord:
-            keyWord.append(word)
+            wordList.append(word)
+            if word not in keyWord:
+                keyWord.append(word)
 
     for word in keyWord:
+        result.update({word: wordList.count(word)})
         with open(path, mode='a') as f:
             f.write(word + ':' + str(wordList.count(word)) + '\n')
         # print(word, wordList.count(word))
+
+    for k, v in sorted(result.items(), key=lambda x: -x[1]):
+        answer.append({k: v})
+
+    print(answer[0:10])
 
 
 if __name__ == '__main__':
@@ -194,5 +214,4 @@ if __name__ == '__main__':
     result = statistics(katari, outou_a)
     result = statistics(result, outou_b)
 
-    # print(result)
     count(result)

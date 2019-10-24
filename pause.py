@@ -114,10 +114,10 @@ class Pause:
                     targetFileList.sort()
                     for targetFile in targetFileList:
                         self.readPause(targetFile)
-                    num = file_index + '-' + index
-                    self.pauseCompare.update({num: self.pause})
-                    self.pause = []
                     self.marge = False  # ファイルを跨いだ更新は行わない
+                num = file_index + '-' + index
+                self.pauseCompare.update({num: self.pause})
+                self.pause = []
 
         return self.pauseCompare
 
