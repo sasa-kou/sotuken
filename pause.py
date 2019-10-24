@@ -99,7 +99,6 @@ class Pause:
     def __init__(self):
         self.pause = []
         self.marge = False
-        self.length = []  # 200msより、0が短く、1が長い
         self.pauseCompare = {}
 
     def read_data(self):
@@ -139,20 +138,11 @@ class Pause:
                 self.pause.pop(-1)  # 最後の要素を削除
                 time = [start, end]
                 self.pause.append(time)
-                if round(end-start, 2) >= 0.2:
-                    self.length.append(1)
-                else:
-                    self.length.append(0)
             elif data[0] == 'silB' and not self.marge:  # ファイルを跨いだらそのまま
                 start = float(data[1:3][0])
                 end = float(data[1:3][1])
                 time = [start, end]
                 self.pause.append(time)
-                if round(end-start, 2) >= 0.2:
-                    self.length.append(1)
-                else:
-                    self.length.append(0)
-
             if data[0] == 'silE' or data[0] == 'sp' or data[0] == 'pause':
                 start = float(data[1:3][0])
                 end = float(data[1:3][1])
@@ -164,25 +154,23 @@ class Pause:
                         self.pause.pop(-1)  # 最後の要素を削除
                 time = [start, end]
                 self.pause.append(time)
-                if round(end-start, 2) >= 0.2:
-                    self.length.append(1)
-                else:
-                    self.length.append(0)
 
         if not self.marge:  # Falseの時、次からはマージする
             self.marge = True
 
         file.close()
 
-    def countLength(self):
-        print('CH', len(self.length), len(self.pause))
-        print("長い：", self.length.count(1))
-        print("短い：", self.length.count(0))
+    def count(self):
+        count = 0
+        for index in list(self.pauseCompare.keys()):
+            count = count + len(self.pauseCompare[index])
+
+        return count
 
 
 def trance_data(pause, outou):
     interval = 0
-
+    length = []  # 間の長さが200ms以上なら1
     for index in list(pause.keys()):
         # print(index)
         for time in pause[index]:
@@ -192,27 +180,42 @@ def trance_data(pause, outou):
             for time in outou[index]:
                 if start < time and time < end:
                     interval += 1
-                    #print(start, end)
-                    #print(time, end=' ')
-                    #print(outou[index][time])
+                    if round(end-start, 2) >= 0.2:
+                        length.append(1)
+                    else:
+                        length.append(0)
 
-    return interval
+                    # print(start, end)
+                    # print(time, end=' ')
+                    # print(outou[index][time])
+
+    return interval, length
+
 
 if __name__ == '__main__':
     ps = Pause()
     pause = ps.read_data()
-    ps.countLength()
+    pause_num = ps.count()
+    print('間の数', pause_num)
 
+    print('A')
     ot = Outou('a')
     outou_a_label, outou_a = ot.read_data()
     num = ot.count()
     print('応答数：', num)
-    interval_a = trance_data(pause, outou_a)
-    print('間での応答数：',interval_a)
+    interval, length = trance_data(pause, outou_a)
+    print('間での応答数：', interval)
+    print('そのうち200ms以上の応答数：', length.count(1))
+    print('全体の応答数に対する間での応答数の割合：', round(interval/num*100, 2))
+    print('全体の間に対する間での応答数の割合：', round(interval/pause_num*100, 2))
 
+    print('B')
     ot = Outou('b')
     outou_b_label, outou_b = ot.read_data()
     num = ot.count()
     print('応答数：', num)
-    interval_b = trance_data(pause, outou_b)
-    print('間での応答数：',interval_b)
+    interval, length = trance_data(pause, outou_b)
+    print('間での応答数：', interval)
+    print('そのうち200ms以上の応答数：', length.count(1))
+    print('全体の応答数に対する間での応答数の割合：', round(interval/num*100, 2))
+    print('全体の間に対する間での応答数の割合：', round(interval/pause_num*100, 2))
