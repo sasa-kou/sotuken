@@ -10,6 +10,7 @@ with open(path, mode='w') as f:
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
+fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -89,6 +90,8 @@ class KatariPause:
     def __init__(self):
         self.katari = []
         self.katari_compare = {}
+        self.hinshi = []
+        self.hinshi_compare = {}
 
     def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
         file_root = '../../katari_info/'
@@ -105,9 +108,11 @@ class KatariPause:
                         self.readKatari(targetFile)
                 num = file_index + '-' + index
                 self.katari_compare.update({num: self.katari})
+                self.hinshi_compare.update({num: self.hinshi})
                 self.katari = []
+                self.hinshi = []
 
-        return self.katari_compare
+        return self.katari_compare, self.hinshi_compare
 
     def readKatari(self, file_name):  # 語り手側  {{語り開始時間:語り終了時間}:言葉}
         file = open(file_name)  # データ入力
@@ -123,15 +128,22 @@ class KatariPause:
                 continue
             elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
                 word = 'pause' + str(i)
+                hinshi = 'pause' + str(i)
                 begin = float(data[1:3][0])
                 end = float(data[1:3][1])
 
                 if len(self.katari) != 0:
-                    last_word = list(self.katari[-1].keys())
-                    last_time = list(self.katari[-1].values())
-                    if 'pause' in last_word[0]:
+                    last_katari_word = list(self.katari[-1].keys())
+                    last_katari_time = list(self.katari[-1].values())
+                    last_hinshi_word = list(self.hinshi[-1].keys())
+                    last_hinshi_time = list(self.hinshi[-1].values())
+
+                    if 'pause' in last_katari_word[0]:
                         self.katari.pop(-1)
-                        begin = last_time[0][0]
+                        begin = last_katari_time[0][0]
+                    if 'pause' in last_hinshi_word[0]:
+                        self.hinshi.pop(-1)
+                        begin = last_hinshi_time[0][0]
 
                 time = [begin, end]
 
@@ -141,12 +153,13 @@ class KatariPause:
                 continue
             else:
                 word = data[0]
+                hinshi = data[1]
                 begin = float(data[num-1])
                 end = float(data[num])
                 time = [begin, end]
 
             self.katari.append({word: time})
-
+            self.hinshi.append({hinshi: time})
         file.close()
 
 
@@ -169,7 +182,7 @@ def statistics(katari_info, outou_info):
                         # print(outou_info[index][outou_time], outou_time)
                         katari_info[index].pop(num)
                     break
-
+                
     return katari_info
 
 
@@ -203,7 +216,7 @@ def count(data):
 
 if __name__ == '__main__':
     kt = KatariPause()
-    katari = kt.read_data()
+    katari, hinshi = kt.read_data()
 
     ot = Outou('a')
     outou_a, outou_label = ot.read_data()
@@ -211,7 +224,20 @@ if __name__ == '__main__':
     ot = Outou('b')
     outou_b, outou_label = ot.read_data()
 
-    result = statistics(katari, outou_a)
-    result = statistics(result, outou_b)
+    print('A')
+    katari_a = katari.copy()
+    hinshi_a = hinshi.copy()
+    result = statistics(katari_a, outou_a)
+    count(result)
+    result = statistics(hinshi_a, outou_a)
+    count(result)
+    
+    print()
 
+    print('B')
+    katari_b = katari.copy()
+    hinshi_b = hinshi.copy()
+    result = statistics(katari_b, outou_b)
+    count(result)
+    result = statistics(hinshi_b, outou_b)
     count(result)
