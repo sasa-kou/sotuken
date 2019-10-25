@@ -3,6 +3,7 @@ import sys
 import os
 import shutil
 from functools import reduce
+import copy
 path = 'disagreementResult.txt'
 with open(path, mode='w') as f:
     f.write('')
@@ -89,9 +90,11 @@ class Outou:
 class KatariPause:
     def __init__(self):
         self.katari = []
-        self.katari_compare = {}
+        self.katari_compare = {}    # {01-1: [{word: time}]}
         self.hinshi = []
         self.hinshi_compare = {}
+        self.detail = []
+        self.detail_compare = {}
 
     def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
         file_root = '../../katari_info/'
@@ -109,10 +112,12 @@ class KatariPause:
                 num = file_index + '-' + index
                 self.katari_compare.update({num: self.katari})
                 self.hinshi_compare.update({num: self.hinshi})
+                self.detail_compare.update({num: self.detail})
                 self.katari = []
                 self.hinshi = []
+                self.detail = []
 
-        return self.katari_compare, self.hinshi_compare
+        return self.katari_compare, self.hinshi_compare, self.detail_compare
 
     def readKatari(self, file_name):  # 語り手側  {{語り開始時間:語り終了時間}:言葉}
         file = open(file_name)  # データ入力
@@ -129,21 +134,18 @@ class KatariPause:
             elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
                 word = 'pause' + str(i)
                 hinshi = 'pause' + str(i)
+                detail = 'pause' + str(i)
                 begin = float(data[1:3][0])
                 end = float(data[1:3][1])
 
                 if len(self.katari) != 0:
-                    last_katari_word = list(self.katari[-1].keys())
-                    last_katari_time = list(self.katari[-1].values())
-                    last_hinshi_word = list(self.hinshi[-1].keys())
-                    last_hinshi_time = list(self.hinshi[-1].values())
-
-                    if 'pause' in last_katari_word[0]:
+                    last_word = list(self.katari[-1].keys())
+                    last_time = list(self.katari[-1].values())
+                    if 'pause' in last_word[0]:
                         self.katari.pop(-1)
-                        begin = last_katari_time[0][0]
-                    if 'pause' in last_hinshi_word[0]:
                         self.hinshi.pop(-1)
-                        begin = last_hinshi_time[0][0]
+                        self.detail.pop(-1)
+                        begin = last_time[0][0]
 
                 time = [begin, end]
 
@@ -154,17 +156,23 @@ class KatariPause:
             else:
                 word = data[0]
                 hinshi = data[1]
+                detail = hinshi + data[2]
+                if detail == '*':
+                    detail = hinshi
                 begin = float(data[num-1])
                 end = float(data[num])
                 time = [begin, end]
 
             self.katari.append({word: time})
             self.hinshi.append({hinshi: time})
+            self.detail.append({detail: time})
         file.close()
 
 
 def statistics(katari_info, outou_info):
+    result = {}
     for index in list(katari_info.keys()):
+        result[index] = []
         for katari in katari_info[index]:
             katari_time = list(katari.values())
             start = katari_time[0][0]
@@ -176,14 +184,16 @@ def statistics(katari_info, outou_info):
                     if 'pause' in popWord[0]:    # pop先がpauseなのを防ぐ
                         # print('pause', katari_info[index][num-1])
                         # print(outou_info[index][outou_time], outou_time)
+                        result[index].append(katari_info[index][num-1])
                         katari_info[index].pop(num-1)
                     else:
                         # print('def', katari_info[index][num])
                         # print(outou_info[index][outou_time], outou_time)
+                        result[index].append(katari_info[index][num])
                         katari_info[index].pop(num)
                     break
-                
-    return katari_info
+
+    return result, katari_info
 
 
 def count(data):
@@ -207,6 +217,8 @@ def count(data):
         with open(path, mode='a') as f:
             f.write(word + ':' + str(wordList.count(word)) + '\n')
         # print(word, wordList.count(word))
+    with open(path, mode='a') as f:
+        f.write('\n')
 
     for k, v in sorted(result.items(), key=lambda x: -x[1]):
         answer.append({k: v})
@@ -214,30 +226,102 @@ def count(data):
     print(answer[0:10])
 
 
+def match(a, b, c):
+    result = []
+    for index in list(a.keys()):
+        for data in a[index]:
+            if data in b[index] and data in c[index]:
+                result.append(data)
+
+    print('一致した個数：', len(result))
+
+    wordList = []  # 出現する単語を全て保存
+    keyWord = []  # 単語の種類を保存
+    done = {}
+    answer = []
+    for data in result:
+        word = list(data.keys())[0]
+
+        if 'pause' in word:
+            continue
+
+        wordList.append(word)
+        if word not in keyWord:
+            keyWord.append(word)
+    
+    for word in keyWord:
+        done.update({word: wordList.count(word)})
+    
+    for k, v in sorted(done.items(), key=lambda x: -x[1]):
+        answer.append({k: v})
+
+    print(answer[0:10])
+
+
 if __name__ == '__main__':
     kt = KatariPause()
-    katari, hinshi = kt.read_data()
+    katari, hinshi, detail = kt.read_data()
 
     ot = Outou('a')
     outou_a, outou_label = ot.read_data()
-
     ot = Outou('b')
     outou_b, outou_label = ot.read_data()
+    ot = Outou('c')
+    outou_c, outou_label = ot.read_data()
 
     print('A')
-    katari_a = katari.copy()
-    hinshi_a = hinshi.copy()
-    result = statistics(katari_a, outou_a)
-    count(result)
-    result = statistics(hinshi_a, outou_a)
-    count(result)
-    
+    katari_a = copy.deepcopy(katari)
+    hinshi_a = copy.deepcopy(hinshi)
+    detail_a = copy.deepcopy(detail)
+    word_a, word_a_not = statistics(katari_a, outou_a)
+    count(word_a)
+    count(word_a_not)
+    print()
+    morpheme_a, morpheme_a_not = statistics(hinshi_a, outou_a)
+    count(morpheme_a)
+    count(morpheme_a_not)
+    print()
+    morphemeDtail_a, morphemeDetail_a_not = statistics(detail, outou_a)
+    count(morphemeDtail_a)
+    count(morphemeDetail_a_not)
+
     print()
 
     print('B')
-    katari_b = katari.copy()
-    hinshi_b = hinshi.copy()
-    result = statistics(katari_b, outou_b)
-    count(result)
-    result = statistics(hinshi_b, outou_b)
-    count(result)
+    katari_b = copy.deepcopy(katari)
+    hinshi_b = copy.deepcopy(hinshi)
+    detail_b = copy.deepcopy(detail)
+    word_b, word_b_not = statistics(katari_b, outou_b)
+    count(word_b)
+    count(word_b_not)
+    print()
+    morpheme_b, morpheme_b_not = statistics(hinshi_b, outou_b)
+    count(morpheme_b)
+    count(morpheme_b_not)
+    print()
+    morphemeDetail_b, morphemeDetail_b_not = statistics(detail, outou_b)
+    count(morphemeDetail_b)
+    count(morphemeDetail_b_not)
+
+    print()
+
+    print('C')
+    katari_c = copy.deepcopy(katari)
+    hinshi_c = copy.deepcopy(hinshi)
+    detail_c = copy.deepcopy(detail)
+    word_c, word_c_not = statistics(katari_c, outou_c)
+    count(word_c)
+    count(word_c_not)
+    print()
+    morpheme_c, morpheme_c_not = statistics(hinshi_c, outou_c)
+    count(morpheme_c)
+    count(morpheme_c_not)
+    print()
+    morphemeDetail_c, morphemeDetail_c_not = statistics(detail_c, outou_c)
+    count(morphemeDetail_c)
+    count(morphemeDetail_c_not)
+
+    print()
+
+    match(morphemeDtail_a, morphemeDetail_b, morphemeDetail_c)
+    match(morphemeDetail_a_not, morphemeDetail_b_not, morphemeDetail_c_not)

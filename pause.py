@@ -162,10 +162,14 @@ class Pause:
 
     def count(self):
         count = 0
+        orver = 0
         for index in list(self.pauseCompare.keys()):
             count = count + len(self.pauseCompare[index])
-
-        return count
+            for data in self.pauseCompare[index]:
+                print(data)
+                if round(data[1]-data[0], 2) >= 0.2:
+                    orver += 1
+        return count, orver
 
 
 def trance_data(pause, outou):
@@ -195,8 +199,9 @@ def trance_data(pause, outou):
 if __name__ == '__main__':
     ps = Pause()
     pause = ps.read_data()
-    pause_num = ps.count()
+    pause_num, pause_orver = ps.count()
     print('間の数', pause_num)
+    print('200ms以上の間', pause_orver)
 
     print('A')
     ot = Outou('a')
@@ -219,3 +224,15 @@ if __name__ == '__main__':
     print('そのうち200ms以上の応答数：', length.count(1))
     print('全体の応答数に対する間での応答数の割合：', round(interval/num*100, 2))
     print('全体の間に対する間での応答数の割合：', round(interval/pause_num*100, 2))
+
+    print('C')
+    ot = Outou('c')
+    outou_c_label, outou_c = ot.read_data()
+    num = ot.count()
+    print('応答数：', num)
+    interval, length = trance_data(pause, outou_c)
+    print('間での応答数：', interval)
+    print('そのうち200ms以上の応答数：', length.count(1))
+    print('全体の応答数に対する間での応答数の割合：', round(interval/num*100, 2))
+    print('全体の間に対する間での応答数の割合：', round(interval/pause_num*100, 2))
+
