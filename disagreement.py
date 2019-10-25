@@ -226,19 +226,20 @@ def count(data):
     print(answer[0:10])
 
 
-def match(a, b, c):
+def match(*args):
     result = []
-    for index in list(a.keys()):
-        for data in a[index]:
-            if data in b[index] and data in c[index]:
-                result.append(data)
-
-    print('一致した個数：', len(result))
-
     wordList = []  # 出現する単語を全て保存
     keyWord = []  # 単語の種類を保存
-    done = {}
+    tmp = {}
     answer = []
+    for index in list(args[0].keys()):
+        for data in args[0][index]:
+            flag = list(map(lambda x: data in x[index], args))
+            if False not in flag:
+                result.append(data)
+
+    print(len(result))
+
     for data in result:
         word = list(data.keys())[0]
 
@@ -248,11 +249,11 @@ def match(a, b, c):
         wordList.append(word)
         if word not in keyWord:
             keyWord.append(word)
-    
+
     for word in keyWord:
-        done.update({word: wordList.count(word)})
-    
-    for k, v in sorted(done.items(), key=lambda x: -x[1]):
+        tmp.update({word: wordList.count(word)})
+
+    for k, v in sorted(tmp.items(), key=lambda x: -x[1]):
         answer.append({k: v})
 
     print(answer[0:10])
