@@ -157,8 +157,6 @@ class KatariPause:
                 word = data[0]
                 hinshi = data[1]
                 detail = hinshi + data[2]
-                if detail == '*':
-                    detail = hinshi
                 begin = float(data[num-1])
                 end = float(data[num])
                 time = [begin, end]
