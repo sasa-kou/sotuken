@@ -15,7 +15,7 @@ testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 class Outou:
     def __init__(self, file_name):
-        self.outou = {}
+        self.outou = []
         self.outou_label = {}
         self.outou_compare = {}
         self.file_name = file_name
@@ -35,7 +35,7 @@ class Outou:
 
                 num = file_index + '-' + index
                 self.outou_compare.update({num: self.outou})
-                self.outou = {}
+                self.outou = []
 
         return self.outou_label, self.outou_compare
 
@@ -76,7 +76,7 @@ class Outou:
                 begin = float(data[num-2])  # 開始時刻の取得
                 # print(word, label, begin)
 
-                self.outou.update({begin: word})
+                self.outou.append({begin: word})
                 self.outou_label.update({begin: label})
 
             else:
@@ -166,7 +166,6 @@ class Pause:
         for index in list(self.pauseCompare.keys()):
             count = count + len(self.pauseCompare[index])
             for data in self.pauseCompare[index]:
-                print(data)
                 if round(data[1]-data[0], 2) >= 0.2:
                     orver += 1
         return count, orver
@@ -176,12 +175,12 @@ def trance_data(pause, outou):
     interval = 0
     length = []  # 間の長さが200ms以上なら1
     for index in list(pause.keys()):
-        # print(index)
         for time in pause[index]:
             start = float(time[0])
             end = float(time[1])
             # print(outou[index])
-            for time in outou[index]:
+            for data in outou[index]:
+                time = list(data.keys())[0]
                 if start < time and time < end:
                     interval += 1
                     if round(end-start, 2) >= 0.2:
