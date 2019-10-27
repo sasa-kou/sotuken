@@ -208,53 +208,31 @@ def count(data, filePath):
             f.write(word + ':' + str(wordList.count(word)) + '\n')
 
 
-class Compare:
-    def __init__(self, katari):
-        self.katari = katari
-        self.time = list(katari.keys())
-        self.word = list(katari.values())
-
-    def match(self, *args):
-        data = []  # 個数をカウントするためにラベルを全て保存
-        label = []  # 出現するラベルのリスト
-        time_list = reduce(lambda x, y: list(
-            set(x) & set(y)), args)  # 全てのargsに対してset()
-        time_list.sort()  # 語り終了時間のリスト
-        con = 0
-
-        with open(path, mode='a') as f:
-            f.write('比較結果' + '\n')
+def fileWrite(katari, outou, filePath):
+    time_list = []
+    for index in list(katari.keys()):
+        for katari_data in katari[index]:
+            katari_time = list(katari_data.keys())[0]
+            time_list.append(katari_time)
+        for outou_data in outou[index]:
+            outou_time = list(outou_data.keys())[0]
+            time_list.append(outou_time)
+        time_list.sort()
 
         for time in time_list:
-            # argsのラベル情報の配列を作成
-            tmp = list(map(lambda x: list(x[time].values()), args))
-            judg = reduce(lambda x, y: list(
-                set(x) & set(y)), tmp)  # ラベルの一致不一致
-            if judg:
-                tmp = list(args[0][time].values())[0]  # ラベル情報を取得
-                data.append(tmp)
-                if tmp not in label:    # ラベルの出現リストに値を追加
-                    label.append(tmp)
-
-                index = self.time.index(time) + 1
-                sent = ""
-                for word in self.word[con:index]:
-                    sent += word
-                con = index
-
-                with open(path, mode='a') as f:
-                    f.write("語り" + sent + '\n')
-                    for word in args:
-                        f.write(str(word[time]) + '\n')
-
-                # print("語り", sent)
-                # print(args[0][time])
-                # print(args[1][time])
-
-        print("語り終了時間が一致した応答の数:", len(time_list))
-        print("そのうちラベルも一致した応答の数:", len(data))
-        for word in label:
-            print(word, data.count(word))
+            flag = list(map(lambda x: time in x, katari[index]))
+            if True in flag:
+                num = flag.index(True)
+                word = list(katari[index][num].values())[0]
+                with open(path + filePath, mode='a') as f:
+                    f.write(word)
+            else:
+                tmp = list(map(lambda x: time in x, outou[index]))
+                num = tmp.index(True)
+                word = list(outou[index][num].values())[0]
+                with open(path + filePath, mode='a') as f:
+                    f.write('\n' + word + '\n')
+        time_list = []
 
 
 if __name__ == '__main__':
@@ -269,6 +247,7 @@ if __name__ == '__main__':
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
     print("１秒間あたりの応答数：", ot.count()/time)
+    fileWrite(katari, outou, 'A')
 
     print('B')
     ot = Outou('b')
