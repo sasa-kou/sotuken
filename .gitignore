@@ -5,6 +5,8 @@ toukeiResult.txt
 pauseResult.txt
 disagreementResult.txt
 katariCount.txt
+hinshiCount.txt
+detailCount.txt
 disagreementPercentage.txt
 
 toukei_cp.py

@@ -184,6 +184,29 @@ class Katari:
                 num += len(data)
         print('語りの個数', num)
 
+    def write(self):
+        count(self.katari_compare, 'katariCount.txt')
+        count(self.hinshi_compare, 'hinshiCount.txt')
+        count(self.detail_compare, 'detailCount.txt')
+
+
+def count(data, filePath):
+    with open(filePath, mode='w') as f:
+        f.write('')
+
+    wordList = []  # 出現する単語を全て保存
+    keyWord = []  # 単語の種類を保存
+    for index in list(data.keys()):
+        for value in data[index]:
+            word = list(value.values())[0]
+            wordList.append(word)
+            if word not in keyWord:
+                keyWord.append(word)
+
+    for word in keyWord:
+        with open(filePath, mode='a') as f:
+            f.write(word + ':' + str(wordList.count(word)) + '\n')
+
 
 class Compare:
     def __init__(self, katari):
@@ -234,33 +257,12 @@ class Compare:
             print(word, data.count(word))
 
 
-def count(data):
-    filePath = 'katariCount.txt'
-    with open(filePath, mode='w') as f:
-        f.write('')
-
-    wordList = []  # 出現する単語を全て保存
-    keyWord = []  # 単語の種類を保存
-    for index in list(data.keys()):
-        for value in data[index]:
-            word = list(value.values())[0]
-            wordList.append(word)
-            if word not in keyWord:
-                keyWord.append(word)
-
-    for word in keyWord:
-        with open(filePath, mode='a') as f:
-            f.write(word + ':' + str(wordList.count(word)) + '\n')
-
-
 if __name__ == '__main__':
     kt = Katari()
     katari, time, hinshi, detail = kt.read_data()
     kt.length()
     print("語り総時間：", time)
-    # count(katari)
-    # count(hinshi)
-    count(detail)
+    kt.write()  # fileWrite
 
     print('A')
     ot = Outou('a')
