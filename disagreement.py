@@ -11,7 +11,6 @@ with open(path, mode='w') as f:
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
-fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -235,8 +234,7 @@ def match(*args):
             flag = list(map(lambda x: data in x[index], args))
             if False not in flag:
                 result.append(data)
-
-    print(len(result))
+    # print(len(result))
 
     for data in result:
         word = list(data.keys())[0]
@@ -280,7 +278,7 @@ if __name__ == '__main__':
     count(morpheme_a)
     count(morpheme_a_not)
     print()
-    morphemeDtail_a, morphemeDetail_a_not = statistics(detail, outou_a)
+    morphemeDtail_a, morphemeDetail_a_not = statistics(detail_a, outou_a)
     count(morphemeDtail_a)
     count(morphemeDetail_a_not)
 
@@ -298,7 +296,7 @@ if __name__ == '__main__':
     count(morpheme_b)
     count(morpheme_b_not)
     print()
-    morphemeDetail_b, morphemeDetail_b_not = statistics(detail, outou_b)
+    morphemeDetail_b, morphemeDetail_b_not = statistics(detail_b, outou_b)
     count(morphemeDetail_b)
     count(morphemeDetail_b_not)
 
@@ -322,5 +320,9 @@ if __name__ == '__main__':
 
     print()
 
+    match(word_a, word_b, word_c)
+    match(morpheme_a, morpheme_b, morpheme_c)
     match(morphemeDtail_a, morphemeDetail_b, morphemeDetail_c)
+    match(word_a_not, word_b_not, word_c_not)
+    match(morpheme_a_not, morpheme_b_not, morpheme_c_not)
     match(morphemeDetail_a_not, morphemeDetail_b_not, morphemeDetail_c_not)
