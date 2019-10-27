@@ -224,13 +224,13 @@ def fileWrite(katari, outou, filePath):
             if True in flag:
                 num = flag.index(True)
                 word = list(katari[index][num].values())[0]
-                with open(path + filePath, mode='a') as f:
+                with open('toukeiResult' + filePath + '.txt', mode='a') as f:
                     f.write(word)
             else:
                 tmp = list(map(lambda x: time in x, outou[index]))
                 num = tmp.index(True)
                 word = list(outou[index][num].values())[0]
-                with open(path + filePath, mode='a') as f:
+                with open('toukeiResult' + filePath + '.txt', mode='a') as f:
                     f.write('\n' + word + '\n')
         time_list = []
 
