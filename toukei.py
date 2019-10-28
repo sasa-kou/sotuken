@@ -254,9 +254,11 @@ if __name__ == '__main__':
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
     print("１秒間あたりの応答数：", ot.count()/time)
+    fileWrite(katari, outou, 'B')
 
     print('C')
     ot = Outou('c')
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
     print("１秒間あたりの応答数：", ot.count()/time)
+    fileWrite(katari, outou, 'C')
