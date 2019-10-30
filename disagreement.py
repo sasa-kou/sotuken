@@ -193,7 +193,23 @@ def statistics(katari_info, outou_info):
     return result, katari_info
 
 
-def count(data):
+def readData(target):
+    data = []
+    if target == 'katari':
+        with open('katariCount.txt', mode='r') as f:
+            data = f.read()
+    elif target == 'hinshi':
+        with open('hinshiCount.txt', mode='r') as f:
+            data = f.read()
+    elif target == 'detail':
+        with open('detailCount.txt', mode='r') as f:
+            data = f.read()
+
+    data = data.split("\n")
+    return data
+
+
+def count(data, targetData):
     result = {}
     answer = []
     wordList = []  # 出現する単語を全て保存
@@ -210,20 +226,23 @@ def count(data):
                 keyWord.append(word)
 
     for word in keyWord:
-        result.update({word: wordList.count(word)})
-        with open(path, mode='a') as f:
-            f.write(word + ':' + str(wordList.count(word)) + '\n')
-        # print(word, wordList.count(word))
-    with open(path, mode='a') as f:
-        f.write('\n')
+        flag = list(map(lambda x: word == x.split(':')[0], targetData))
+        num = flag.index(True)
+        allData = int(targetData[num].split(':')[1])
+        parcentage = round(wordList.count(word)/allData*100, 2)
+        result.update({word: parcentage})
 
     for k, v in sorted(result.items(), key=lambda x: -x[1]):
         answer.append({k: v})
+        # with open(path, mode='a') as f:
+        #f.write(str(k) + ':' + str(v) + '\n')
+    # with open(path, mode='a') as f:
+        # f.write('\n')
 
     print(answer[0:10])
 
 
-def match(*args):
+def match(targetData, *args):
     result = []
     wordList = []  # 出現する単語を全て保存
     keyWord = []  # 単語の種類を保存
@@ -247,7 +266,11 @@ def match(*args):
             keyWord.append(word)
 
     for word in keyWord:
-        tmp.update({word: wordList.count(word)})
+        flag = list(map(lambda x: word == x.split(':')[0], targetData))
+        num = flag.index(True)
+        allData = int(targetData[num].split(':')[1])
+        parcentage = round(wordList.count(word)/allData*100, 2)
+        tmp.update({word: parcentage})
 
     for k, v in sorted(tmp.items(), key=lambda x: -x[1]):
         answer.append({k: v})
@@ -258,6 +281,10 @@ def match(*args):
 if __name__ == '__main__':
     kt = KatariPause()
     katari, hinshi, detail = kt.read_data()
+
+    katariData = readData('katari')
+    hinshiData = readData('hinshi')
+    detailData = readData('detail')
 
     ot = Outou('a')
     outou_a, outou_label = ot.read_data()
@@ -271,16 +298,17 @@ if __name__ == '__main__':
     hinshi_a = copy.deepcopy(hinshi)
     detail_a = copy.deepcopy(detail)
     word_a, word_a_not = statistics(katari_a, outou_a)
-    count(word_a)
-    count(word_a_not)
+    count(word_a, katariData)
+    count(word_a_not, katariData)
     print()
     morpheme_a, morpheme_a_not = statistics(hinshi_a, outou_a)
-    count(morpheme_a)
-    count(morpheme_a_not)
+    count(morpheme_a, hinshiData)
+    count(morpheme_a_not, hinshiData)
     print()
+
     morphemeDtail_a, morphemeDetail_a_not = statistics(detail_a, outou_a)
-    count(morphemeDtail_a)
-    count(morphemeDetail_a_not)
+    count(morphemeDtail_a, detailData)
+    count(morphemeDetail_a_not, detailData)
 
     print()
 
@@ -289,16 +317,16 @@ if __name__ == '__main__':
     hinshi_b = copy.deepcopy(hinshi)
     detail_b = copy.deepcopy(detail)
     word_b, word_b_not = statistics(katari_b, outou_b)
-    count(word_b)
-    count(word_b_not)
+    count(word_b, katariData)
+    count(word_b_not, katariData)
     print()
     morpheme_b, morpheme_b_not = statistics(hinshi_b, outou_b)
-    count(morpheme_b)
-    count(morpheme_b_not)
+    count(morpheme_b, hinshiData)
+    count(morpheme_b_not, hinshiData)
     print()
     morphemeDetail_b, morphemeDetail_b_not = statistics(detail_b, outou_b)
-    count(morphemeDetail_b)
-    count(morphemeDetail_b_not)
+    count(morphemeDetail_b, detailData)
+    count(morphemeDetail_b_not, detailData)
 
     print()
 
@@ -307,22 +335,24 @@ if __name__ == '__main__':
     hinshi_c = copy.deepcopy(hinshi)
     detail_c = copy.deepcopy(detail)
     word_c, word_c_not = statistics(katari_c, outou_c)
-    count(word_c)
-    count(word_c_not)
+    count(word_c, katariData)
+    count(word_c_not, katariData)
     print()
     morpheme_c, morpheme_c_not = statistics(hinshi_c, outou_c)
-    count(morpheme_c)
-    count(morpheme_c_not)
+    count(morpheme_c, hinshiData)
+    count(morpheme_c_not, hinshiData)
     print()
     morphemeDetail_c, morphemeDetail_c_not = statistics(detail_c, outou_c)
-    count(morphemeDetail_c)
-    count(morphemeDetail_c_not)
+    count(morphemeDetail_c, detailData)
+    count(morphemeDetail_c_not, detailData)
 
     print()
 
-    match(word_a, word_b, word_c)
-    match(morpheme_a, morpheme_b, morpheme_c)
-    match(morphemeDtail_a, morphemeDetail_b, morphemeDetail_c)
-    match(word_a_not, word_b_not, word_c_not)
-    match(morpheme_a_not, morpheme_b_not, morpheme_c_not)
-    match(morphemeDetail_a_not, morphemeDetail_b_not, morphemeDetail_c_not)
+    match(katariData, word_a, word_b, word_c)
+    match(hinshiData, morpheme_a, morpheme_b, morpheme_c)
+    match(detailData, morphemeDtail_a, morphemeDetail_b, morphemeDetail_c)
+    print()
+    match(katariData, word_a_not, word_b_not, word_c_not)
+    match(hinshiData, morpheme_a_not, morpheme_b_not, morpheme_c_not)
+    match(detailData, morphemeDetail_a_not,
+          morphemeDetail_b_not, morphemeDetail_c_not)
