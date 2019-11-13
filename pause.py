@@ -209,9 +209,9 @@ if __name__ == '__main__':
     print('応答数：', num)
     interval, length = trance_data(pause, outou_a)
     print('間での応答数：', interval)
-    print('そのうち200ms以上の応答数：', length.count(1))
-    print('全体の応答数に対する間での応答数の割合：', round(interval/num*100, 2))
-    print('全体の間に対する間での応答数の割合：', round(interval/pause_num*100, 2))
+    print('そのうち200ms以上の語りの間での応答数：', length.count(1))
+    print('200ms以上の語りの間における応答割合：', round(length.count(1)/pause_orver*100, 2))
+    print('全応答のうち200ms以上の間での応答割合：', round(length.count(1)/num*100, 2))
 
     print('B')
     ot = Outou('b')
@@ -220,9 +220,9 @@ if __name__ == '__main__':
     print('応答数：', num)
     interval, length = trance_data(pause, outou_b)
     print('間での応答数：', interval)
-    print('そのうち200ms以上の応答数：', length.count(1))
-    print('全体の応答数に対する間での応答数の割合：', round(interval/num*100, 2))
-    print('全体の間に対する間での応答数の割合：', round(interval/pause_num*100, 2))
+    print('そのうち200ms以上の語りの間での応答数：', length.count(1))
+    print('200ms以上の語りの間における応答割合：', round(length.count(1)/pause_orver*100, 2))
+    print('全応答のうち200ms以上の間での応答割合：', round(length.count(1)/num*100, 2))
 
     print('C')
     ot = Outou('c')
@@ -231,7 +231,7 @@ if __name__ == '__main__':
     print('応答数：', num)
     interval, length = trance_data(pause, outou_c)
     print('間での応答数：', interval)
-    print('そのうち200ms以上の応答数：', length.count(1))
-    print('全体の応答数に対する間での応答数の割合：', round(interval/num*100, 2))
-    print('全体の間に対する間での応答数の割合：', round(interval/pause_num*100, 2))
-
+    print('そのうち200ms以上の語りの間での応答数：', length.count(1))
+    print('200ms以上の語りの間における応答割合：', round(length.count(1)/pause_orver*100, 2))
+    print('全応答のうち200ms以上の間での応答割合：', round(length.count(1)/num*100, 2))
+    

@@ -346,12 +346,12 @@ if __name__ == '__main__':
     count(morphemeDetail_c, detailData)
     count(morphemeDetail_c_not, detailData)
 
-    print()
-
+    print('応答した')
     match(katariData, word_a, word_b, word_c)
     match(hinshiData, morpheme_a, morpheme_b, morpheme_c)
     match(detailData, morphemeDtail_a, morphemeDetail_b, morphemeDetail_c)
     print()
+    print('応答してない')
     match(katariData, word_a_not, word_b_not, word_c_not)
     match(hinshiData, morpheme_a_not, morpheme_b_not, morpheme_c_not)
     match(detailData, morphemeDetail_a_not,
