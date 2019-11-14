@@ -5,7 +5,6 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
-fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -167,71 +166,6 @@ class Segment:
                 time = [begin, end]
 
             if self.flag:
-                if 'pause' in word:
-                    tmpBegin = time[0]
-                    flag = time[1]
-                    self.katari.append({'word': word, 'time': time})
-                    self.hinshi.append({'word': hinshi, 'time': time})
-                    self.detail.append({'word': detail, 'time': time})
-                else:
-                    if flag != time[0]:  # そのまま更新
-                        self.katari.append({'word': word, 'time': time})
-                        self.hinshi.append({'word': hinshi, 'time': time})
-                        self.detail.append({'word': detail, 'time': time})
-                    else:   # 時間を編集して更新
-                        newTime = [tmpBegin, time[1]]
-                        self.katari.pop(-1)
-                        self.hinshi.pop(-1)
-                        self.detail.pop(-1)
-                        self.katari.append({'word': word, 'time': newTime})
-                        self.hinshi.append({'word': hinshi, 'time': newTime})
-                        self.detail.append({'word': detail, 'time': newTime})
-                    self.flag = False
-        file.close()
-
-    def readKatari(self, file_name):
-        file = open(file_name)  # データ入力
-        lines = file.readlines()
-
-        for i, data in enumerate(lines[0:len(lines)]):
-            data = data.rstrip('\n')  # 改行の削除
-            data = data.split(',')  # ','で分割
-            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
-
-            # 例外処理
-            if num == 0:
-                self.flag = True
-                continue
-            elif data[0] == "(" or data[0] == ")":
-                continue
-            elif data[1] == "補助記号":
-                continue
-            elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
-                word = 'pause' + str(i)
-                hinshi = 'pause' + str(i)
-                detail = 'pause' + str(i)
-                begin = float(data[1:3][0])
-                end = float(data[1:3][1])
-
-                if len(self.katari) != 0:
-                    last_word = self.katari[-1]['word']
-                    last_time = self.katari[-1]['time']
-                    if 'pause' in last_word:
-                        self.katari.pop(-1)
-                        self.hinshi.pop(-1)
-                        self.detail.pop(-1)
-                        begin = last_time[0]
-
-                time = [begin, end]
-            else:
-                word = data[0]
-                hinshi = data[1]
-                detail = hinshi + data[2]
-                begin = float(data[num-1])
-                end = float(data[num])
-                time = [begin, end]
-
-            if self.flag:
                 if 'pause' in word:  # pause時の時間情報を保持するため必要
                     tmpBegin = time[0]
                     flag = time[1]
@@ -264,10 +198,9 @@ class Segment:
         count = 0
         data = copy.deepcopy(self.katari_compare)
         for index in list(data.keys()):
-            result[index] = []
             value = list(filter(lambda x: target in x['hinshi'], data[index]))
             count += len(value)
-            result[index].append(value)
+            result[index] = value
 
         return result, count
 
@@ -278,94 +211,8 @@ class Segment:
         return count
 
 
-class Clause(Segment):
-    def __init__(self):
-        super(Clause, self).__init__()
-
-    def readKatari(self, file_name):
-        file = open(file_name)  # データ入力
-        lines = file.readlines()
-
-        for i, data in enumerate(lines[0:len(lines)]):
-            data = data.rstrip('\n')  # 改行の削除
-            data = data.split(',')  # ','で分割
-            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
-
-            # 例外処理
-            if num == 0:
-                self.flag = True
-                continue
-            elif data[0] == "(" or data[0] == ")":
-                continue
-            elif data[1] == "補助記号":
-                continue
-            elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
-                word = 'pause' + str(i)
-                hinshi = 'pause' + str(i)
-                detail = 'pause' + str(i)
-                begin = float(data[1:3][0])
-                end = float(data[1:3][1])
-
-                if len(self.katari) != 0:
-                    last_word = self.katari[-1]['word']
-                    last_time = self.katari[-1]['time']
-                    if 'pause' in last_word:
-                        self.katari.pop(-1)
-                        self.hinshi.pop(-1)
-                        self.detail.pop(-1)
-                        begin = last_time[0]
-
-                time = [begin, end]
-            else:
-                word = data[0]
-                hinshi = data[1]
-                detail = hinshi + data[2]
-                begin = float(data[num-1])
-                end = float(data[num])
-                time = [begin, end]
-
-            if self.flag:
-                if 'pause' in word:  # pause時の時間情報を保持するため必要
-                    tmpBegin = time[0]
-                    flag = time[1]
-                    self.katari.append({'word': word, 'time': time})
-                    self.hinshi.append({'word': hinshi, 'time': time})
-                    self.detail.append({'word': detail, 'time': time})
-                else:
-                    if flag != time[0]:  # そのまま更新
-                        self.katari.append(
-                            {'word': word, 'time': time, 'hinshi': [hinshi]})
-                        self.hinshi.append({'word': hinshi, 'time': time})
-                        self.detail.append({'word': detail, 'time': time})
-                    else:   # 時間を編集して更新
-                        newTime = [tmpBegin, time[1]]
-                        self.katari.pop(-1)
-                        self.hinshi.pop(-1)
-                        self.detail.pop(-1)
-                        self.katari.append(
-                            {'word': word, 'time': newTime, 'hinshi': [hinshi]})
-                        self.hinshi.append({'word': hinshi, 'time': newTime})
-                        self.detail.append({'word': detail, 'time': newTime})
-                    self.flag = False
-            else:
-                if 'pause' not in hinshi:
-                    self.katari[-1]['hinshi'].append(hinshi)
-        file.close()
-
-    def filter(self, target):
-        result = {}
-        count = 0
-        data = copy.deepcopy(self.katari_compare)
-        for index in list(data.keys()):
-            result[index] = []
-            value = list(filter(lambda x: target in x['hinshi'], data[index]))
-            count += len(value)
-            result[index].append(value)
-
-        return result, count
-
-
-def statistics(katari_info, outou_info):
+def statistics_count(katari_data, outou_info):
+    katari_info = copy.deepcopy(katari_data)
     count = 0
     for index in list(katari_info.keys()):
         for katari in katari_info[index]:
@@ -376,10 +223,29 @@ def statistics(katari_info, outou_info):
                 outou_time = list(outou.keys())[0]
                 if start <= outou_time and outou_time < end:
                     count += 1
+                    break
+    return count
+
+
+def statistics_info(katari_data, outou_info, target):
+    katari_info = copy.deepcopy(katari_data)
+    count = 0
+    for index in list(katari_info):
+        for katari in katari_info[index]:
+            katari_time = katari['time']
+            start = katari_time[0]
+            end = katari_time[1]
+            for outou in outou_info[index]:
+                outou_time = list(outou.keys())[0]
+                if start <= outou_time and outou_time < end:
                     # num = katari_info[index].index(katari)
                     # num2 = outou_info[index].index(outou)
-                    # print(katari_info[index][num], outou_info[index][num2])
-                    break
+                    popIndex = katari_info[index].index(
+                        katari) - 1  # 応答があった一つ前の文節が対象
+                    # print(katari_info[index][popIndex],katari_info[index][num], outou_info[index][num2])
+                    if target in katari_info[index][popIndex]['hinshi']:
+                        count += 1
+
     return count
 
 
@@ -387,11 +253,13 @@ if __name__ == '__main__':
     kt = Segment()
     katari, hinshi, detail = kt.read_data()
     num = kt.count()
-    meisi, length = kt.filter('名詞')
     print('文節の数：', num)
-    print('名詞を含む文節の数', length)
 
-"""
+    meishi, length_meishi = kt.filter('名詞')
+    doushi, length_doushi = kt.filter('動詞')
+    print('名詞を含む文節の数', length_meishi)
+    print('動詞を含む文節の数', length_doushi)
+
     ot = Outou('a')
     outou_a, outou_label_a = ot.read_data()
     num_a = ot.count()
@@ -403,27 +271,46 @@ if __name__ == '__main__':
     num_c = ot.count()
 
     print('A')
-    print('応答数：',num_a)
-    katari_a = copy.deepcopy(katari)
-    count = statistics(katari_a, outou_a)
+    print('応答数：', num_a)
+    count = statistics_count(katari, outou_a)
+    count_meishi = statistics_info(katari, outou_a, '名詞')
+    count_doushi = statistics_info(katari, outou_a, '動詞')
     print('文節での応答数：', count)
-    print('全応答に対する割合：',round(count/num_a*100, 2), '% ', count, '/', num_a)
+    print('名詞を含む文節での応答数：', count_meishi)
+    print('動詞を含む文節での応答数：', count_doushi)
+    print('全応答に対する割合：', round(count/num_a*100, 2), '% ', count, '/', num_a)
     print('全文節に対する割合：', round(count/num*100, 2), '% ', count, '/', num)
+    print('名詞を含む文節に関する割合', round(count_meishi/length_meishi*100, 2),
+          '% ', count_meishi, '/', length_meishi)
+    print('動詞を含む文節に関する割合', round(count_doushi/length_doushi*100, 2),
+          '% ', count_doushi, '/', length_doushi)
 
     print('B')
-    print('応答数：',num_b)
-    katari_b = copy.deepcopy(katari)
-    count = statistics(katari_b, outou_b)
+    print('応答数：', num_b)
+    count = statistics_count(katari, outou_b)
+    count_meishi = statistics_info(katari, outou_b, '名詞')
+    count_doushi = statistics_info(katari, outou_b, '動詞')
     print('文節での応答数：', count)
-    print('全応答に対する割合：',round(count/num_a*100, 2), '% ', count, '/', num_a)
+    print('名詞を含む文節での応答数：', count_meishi)
+    print('動詞を含む文節での応答数：', count_doushi)
+    print('全応答に対する割合：', round(count/num_a*100, 2), '% ', count, '/', num_a)
     print('全文節に対する割合：', round(count/num*100, 2), '% ', count, '/', num)
+    print('名詞を含む文節に関する割合', round(count_meishi/length_meishi*100, 2),
+          '% ', count_meishi, '/', length_meishi)
+    print('動詞を含む文節に関する割合', round(count_doushi/length_doushi*100, 2),
+          '% ', count_doushi, '/', length_doushi)
 
     print('C')
-    print('応答数：',num_c)
-    katari_c = copy.deepcopy(katari)
-    count = statistics(katari_c, outou_c)
+    print('応答数：', num_c)
+    count = statistics_count(katari, outou_c)
+    count_meishi = statistics_info(katari, outou_c, '名詞')
+    count_doushi = statistics_info(katari, outou_c, '動詞')
     print('文節での応答数：', count)
-    print('全応答に対する割合：',round(count/num_a*100, 2), '% ', count, '/', num_a)
+    print('名詞を含む文節での応答数：', count_meishi)
+    print('動詞を含む文節での応答数：', count_doushi)
+    print('全応答に対する割合：', round(count/num_a*100, 2), '% ', count, '/', num_a)
     print('全文節に対する割合：', round(count/num*100, 2), '% ', count, '/', num)
-
-"""
+    print('名詞を含む文節に関する割合', round(count_meishi/length_meishi*100, 2),
+          '% ', count_meishi, '/', length_meishi)
+    print('動詞を含む文節に関する割合', round(count_doushi/length_doushi*100, 2),
+          '% ', count_doushi, '/', length_doushi)
