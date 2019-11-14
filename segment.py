@@ -5,6 +5,7 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
+fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -123,7 +124,7 @@ class Segment:
 
         return self.katari_compare, self.hinshi_compare, self.detail_compare
 
-    def readKatari(self, file_name):  # 語り手側  {{語り開始時間:語り終了時間}:言葉}
+    def readKatari(self, file_name):
         file = open(file_name)  # データ入力
         lines = file.readlines()
 
@@ -148,13 +149,13 @@ class Segment:
                 end = float(data[1:3][1])
 
                 if len(self.katari) != 0:
-                    last_word = list(self.katari[-1].keys())
-                    last_time = list(self.katari[-1].values())
-                    if 'pause' in last_word[0]:
+                    last_word = self.katari[-1]['word']
+                    last_time = self.katari[-1]['time']
+                    if 'pause' in last_word:
                         self.katari.pop(-1)
                         self.hinshi.pop(-1)
                         self.detail.pop(-1)
-                        begin = last_time[0][0]
+                        begin = last_time[0]
 
                 time = [begin, end]
             else:
@@ -169,24 +170,106 @@ class Segment:
                 if 'pause' in word:
                     tmpBegin = time[0]
                     flag = time[1]
-                    self.katari.append({word: time})
-                    self.hinshi.append({hinshi: time})
-                    self.detail.append({detail: time})
+                    self.katari.append({'word': word, 'time': time})
+                    self.hinshi.append({'word': hinshi, 'time': time})
+                    self.detail.append({'word': detail, 'time': time})
                 else:
                     if flag != time[0]:  # そのまま更新
-                        self.katari.append({word: time})
-                        self.hinshi.append({hinshi: time})
-                        self.detail.append({detail: time})
+                        self.katari.append({'word': word, 'time': time})
+                        self.hinshi.append({'word': hinshi, 'time': time})
+                        self.detail.append({'word': detail, 'time': time})
                     else:   # 時間を編集して更新
                         newTime = [tmpBegin, time[1]]
                         self.katari.pop(-1)
                         self.hinshi.pop(-1)
                         self.detail.pop(-1)
-                        self.katari.append({word: newTime})
-                        self.hinshi.append({hinshi: newTime})
-                        self.detail.append({detail: newTime})
+                        self.katari.append({'word': word, 'time': newTime})
+                        self.hinshi.append({'word': hinshi, 'time': newTime})
+                        self.detail.append({'word': detail, 'time': newTime})
                     self.flag = False
         file.close()
+
+    def readKatari(self, file_name):
+        file = open(file_name)  # データ入力
+        lines = file.readlines()
+
+        for i, data in enumerate(lines[0:len(lines)]):
+            data = data.rstrip('\n')  # 改行の削除
+            data = data.split(',')  # ','で分割
+            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
+
+            # 例外処理
+            if num == 0:
+                self.flag = True
+                continue
+            elif data[0] == "(" or data[0] == ")":
+                continue
+            elif data[1] == "補助記号":
+                continue
+            elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
+                word = 'pause' + str(i)
+                hinshi = 'pause' + str(i)
+                detail = 'pause' + str(i)
+                begin = float(data[1:3][0])
+                end = float(data[1:3][1])
+
+                if len(self.katari) != 0:
+                    last_word = self.katari[-1]['word']
+                    last_time = self.katari[-1]['time']
+                    if 'pause' in last_word:
+                        self.katari.pop(-1)
+                        self.hinshi.pop(-1)
+                        self.detail.pop(-1)
+                        begin = last_time[0]
+
+                time = [begin, end]
+            else:
+                word = data[0]
+                hinshi = data[1]
+                detail = hinshi + data[2]
+                begin = float(data[num-1])
+                end = float(data[num])
+                time = [begin, end]
+
+            if self.flag:
+                if 'pause' in word:  # pause時の時間情報を保持するため必要
+                    tmpBegin = time[0]
+                    flag = time[1]
+                    self.katari.append({'word': word, 'time': time})
+                    self.hinshi.append({'word': hinshi, 'time': time})
+                    self.detail.append({'word': detail, 'time': time})
+                else:
+                    if flag != time[0]:  # そのまま更新
+                        self.katari.append(
+                            {'word': word, 'time': time, 'hinshi': [hinshi]})
+                        self.hinshi.append({'word': hinshi, 'time': time})
+                        self.detail.append({'word': detail, 'time': time})
+                    else:   # 時間を編集して更新
+                        newTime = [tmpBegin, time[1]]
+                        self.katari.pop(-1)
+                        self.hinshi.pop(-1)
+                        self.detail.pop(-1)
+                        self.katari.append(
+                            {'word': word, 'time': newTime, 'hinshi': [hinshi]})
+                        self.hinshi.append({'word': hinshi, 'time': newTime})
+                        self.detail.append({'word': detail, 'time': newTime})
+                    self.flag = False
+            else:
+                if 'pause' not in hinshi:
+                    self.katari[-1]['hinshi'].append(hinshi)
+        file.close()
+
+    def filter(self, target):
+        result = {}
+        count = 0
+        data = copy.deepcopy(self.katari_compare)
+        for index in list(data.keys()):
+            result[index] = []
+            value = list(filter(lambda x: target in x['hinshi'], data[index]))
+            count += len(value)
+            result[index].append(value)
+
+        return result, count
 
     def count(self):
         count = 0
@@ -195,13 +278,98 @@ class Segment:
         return count
 
 
+class Clause(Segment):
+    def __init__(self):
+        super(Clause, self).__init__()
+
+    def readKatari(self, file_name):
+        file = open(file_name)  # データ入力
+        lines = file.readlines()
+
+        for i, data in enumerate(lines[0:len(lines)]):
+            data = data.rstrip('\n')  # 改行の削除
+            data = data.split(',')  # ','で分割
+            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
+
+            # 例外処理
+            if num == 0:
+                self.flag = True
+                continue
+            elif data[0] == "(" or data[0] == ")":
+                continue
+            elif data[1] == "補助記号":
+                continue
+            elif data[0] == "sp" or data[0] == "pause" or data[0] == "silB" or data[0] == "silE":
+                word = 'pause' + str(i)
+                hinshi = 'pause' + str(i)
+                detail = 'pause' + str(i)
+                begin = float(data[1:3][0])
+                end = float(data[1:3][1])
+
+                if len(self.katari) != 0:
+                    last_word = self.katari[-1]['word']
+                    last_time = self.katari[-1]['time']
+                    if 'pause' in last_word:
+                        self.katari.pop(-1)
+                        self.hinshi.pop(-1)
+                        self.detail.pop(-1)
+                        begin = last_time[0]
+
+                time = [begin, end]
+            else:
+                word = data[0]
+                hinshi = data[1]
+                detail = hinshi + data[2]
+                begin = float(data[num-1])
+                end = float(data[num])
+                time = [begin, end]
+
+            if self.flag:
+                if 'pause' in word:  # pause時の時間情報を保持するため必要
+                    tmpBegin = time[0]
+                    flag = time[1]
+                    self.katari.append({'word': word, 'time': time})
+                    self.hinshi.append({'word': hinshi, 'time': time})
+                    self.detail.append({'word': detail, 'time': time})
+                else:
+                    if flag != time[0]:  # そのまま更新
+                        self.katari.append(
+                            {'word': word, 'time': time, 'hinshi': [hinshi]})
+                        self.hinshi.append({'word': hinshi, 'time': time})
+                        self.detail.append({'word': detail, 'time': time})
+                    else:   # 時間を編集して更新
+                        newTime = [tmpBegin, time[1]]
+                        self.katari.pop(-1)
+                        self.hinshi.pop(-1)
+                        self.detail.pop(-1)
+                        self.katari.append(
+                            {'word': word, 'time': newTime, 'hinshi': [hinshi]})
+                        self.hinshi.append({'word': hinshi, 'time': newTime})
+                        self.detail.append({'word': detail, 'time': newTime})
+                    self.flag = False
+            else:
+                if 'pause' not in hinshi:
+                    self.katari[-1]['hinshi'].append(hinshi)
+        file.close()
+
+    def filter(self, target):
+        result = {}
+        count = 0
+        data = copy.deepcopy(self.katari_compare)
+        for index in list(data.keys()):
+            result[index] = []
+            value = list(filter(lambda x: target in x['hinshi'], data[index]))
+            count += len(value)
+            result[index].append(value)
+
+        return result, count
+
+
 def statistics(katari_info, outou_info):
-    result = {}
     count = 0
     for index in list(katari_info.keys()):
-        result[index] = []
         for katari in katari_info[index]:
-            katari_time = list(katari.values())[0]
+            katari_time = katari['time']
             start = katari_time[0]
             end = katari_time[1]
             for outou in outou_info[index]:
@@ -219,8 +387,11 @@ if __name__ == '__main__':
     kt = Segment()
     katari, hinshi, detail = kt.read_data()
     num = kt.count()
+    meisi, length = kt.filter('名詞')
     print('文節の数：', num)
+    print('名詞を含む文節の数', length)
 
+"""
     ot = Outou('a')
     outou_a, outou_label_a = ot.read_data()
     num_a = ot.count()
@@ -254,3 +425,5 @@ if __name__ == '__main__':
     print('文節での応答数：', count)
     print('全応答に対する割合：',round(count/num_a*100, 2), '% ', count, '/', num_a)
     print('全文節に対する割合：', round(count/num*100, 2), '% ', count, '/', num)
+
+"""
