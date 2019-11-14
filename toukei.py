@@ -16,8 +16,9 @@ testData_num = ['1', '2', '3', '4', '5', '6', '7']
 class Outou:
     def __init__(self, file_name):
         self.outou = []
-        self.outou_label = {}
+        self.outou_label = []
         self.outou_compare = {}
+        self.outou_label_compare = {}
         self.file_name = file_name
 
     def read_data(self):  # 全ファイルを検索して読み込み
@@ -35,9 +36,11 @@ class Outou:
 
                 num = file_index + '-' + index
                 self.outou_compare.update({num: self.outou})
+                self.outou_label_compare.update({num: self.outou_label})
                 self.outou = []
+                self.outou_label = []
 
-        return self.outou_compare, self.outou_label
+        return self.outou_compare, self.outou_label_compare
 
     def readOutou(self, file_name):  # 語り手側  {語り終了時間:言葉}
         file = open(file_name)  # データ入力
@@ -77,7 +80,7 @@ class Outou:
                 # print(word, label, begin)
 
                 self.outou.append({begin: word})
-                self.outou_label.update({begin: label})
+                self.outou_label.append({begin: label})
 
             else:
                 tmp_str += data[0]  # 文字の退避
@@ -93,6 +96,27 @@ class Outou:
             count = count + len(self.outou_compare[index])
 
         return count
+
+    def label(self):
+        result = {}
+        ans = []
+        labelList = []  # 出現する単語を全て保存
+        keyLabel = []  # 単語の種類を保存
+        for index in list(self.outou_label_compare.keys()):
+            for data in self.outou_label_compare[index]:
+                label = list(data.values())[0]
+                labelList.append(label)
+
+                if label not in keyLabel:
+                    keyLabel.append(label)
+
+        for label in keyLabel:
+            result.update({label:labelList.count(label)})
+        
+        for k,v in sorted(result.items(), key=lambda x: -x[1]):
+            ans.append({k:v})
+        print(ans)
+
 
 
 class Katari:
@@ -242,25 +266,28 @@ if __name__ == '__main__':
     katari, time, hinshi, detail = kt.read_data()
     kt.length()
     print("語り総時間：", time)
-    kt.write()  # fileWrite
+    # kt.write()  # fileWrite
 
     print('A')
     ot = Outou('a')
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
-    print("１秒間あたりの応答数：", ot.count()/time)
-    fileWrite(katari, outou, 'A')
+    print("１秒間あたりの応答数：", round(ot.count()/time, 2), ot.count(), '/', time)
+    ot.label()
+    # fileWrite(katari, outou, 'A')
 
     print('B')
     ot = Outou('b')
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
-    print("１秒間あたりの応答数：", ot.count()/time)
-    fileWrite(katari, outou, 'B')
+    print("１秒間あたりの応答数：", round(ot.count()/time, 2), ot.count(), '/', time)
+    ot.label()
+    # fileWrite(katari, outou, 'B')
 
     print('C')
     ot = Outou('c')
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
-    print("１秒間あたりの応答数：", ot.count()/time)
-    fileWrite(katari, outou, 'C')
+    print("１秒間あたりの応答数：", round(ot.count()/time, 2), ot.count(), '/', time)
+    ot.label()
+    # fileWrite(katari, outou, 'C')
