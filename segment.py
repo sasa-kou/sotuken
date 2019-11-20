@@ -193,7 +193,7 @@ class Segment:
                     self.katari[-1]['hinshi'].append(hinshi)
         file.close()
 
-    def filter(self, target):
+    def labelCount(self, target):
         result = {}
         count = 0
         data = copy.deepcopy(self.katari_compare)
@@ -255,8 +255,8 @@ if __name__ == '__main__':
     num = kt.count()
     print('文節の数：', num)
 
-    meishi, length_meishi = kt.filter('名詞')
-    doushi, length_doushi = kt.filter('動詞')
+    meishi, length_meishi = kt.labelCount('名詞')
+    doushi, length_doushi = kt.labelCount('動詞')
     print('名詞を含む文節の数', length_meishi)
     print('動詞を含む文節の数', length_doushi)
 
