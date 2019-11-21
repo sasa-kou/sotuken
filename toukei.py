@@ -100,11 +100,14 @@ class Outou:
     def label(self):
         result = {}
         ans = []
+        parce = []
         labelList = []  # 出現する単語を全て保存
         keyLabel = []  # 単語の種類を保存
-        path = 'toukeiLabel' + self.file_name + '.txt'
-        with open(path, mode='w') as f:
-            f.write('')
+        size = self.count()
+
+        # path = 'toukeiLabel' + self.file_name + '.txt'
+        # with open(path, mode='w') as f:
+        #     f.write('')
 
         for index in list(self.outou_label_compare.keys()):
             for data in self.outou_label_compare[index]:
@@ -119,9 +122,11 @@ class Outou:
 
         for k, v in sorted(result.items(), key=lambda x: -x[1]):
             ans.append({k: v})
-            with open(path, mode='a') as f:
-                f.write(str(k) + ':' + str(v) + '\n')
+            parce.append({k: round(v/size*100, 2)})
+            # with open(path, mode='a') as f:
+            #     f.write(str(k) + ':' + str(v) + '\n')
         print(ans)
+        print(parce)
 
 
 class Katari:

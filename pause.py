@@ -212,11 +212,12 @@ def readLabelData(file_name):   # 現状使う予定なし
     return data
 
 
-def labelConversion(intervalData, outouLabelData):
+def labelConversion(intervalData, outouLabelData, size):
     labelList = []  # 出現するラベルをすべて保存
     keyLabel = []   # ラベルの種類を保存
     tmp = {}
     result = []
+    parce = []
     for index in list(outouLabelData.keys()):
         for data in intervalData[index]:
             time = list(data.keys())[0]
@@ -232,7 +233,9 @@ def labelConversion(intervalData, outouLabelData):
 
     for k, v in sorted(tmp.items(), key=lambda x: -x[1]):
         result.append({k: v})
+        parce.append({k: round(v/size*100, 2)})
     print(result)
+    print(parce)
 
 
 if __name__ == '__main__':
@@ -251,7 +254,7 @@ if __name__ == '__main__':
         pause, outou_a)
     print('間での応答数：', interval)
     print('そのうち200ms以上の語りの間での応答数：', overThreshold.count(1))
-    labelConversion(overThresholdData, outou_a_label)
+    labelConversion(overThresholdData, outou_a_label, overThreshold.count(1))
     print('200ms以上の語りの間における応答割合：', round(
         overThreshold.count(1)/pause_orver*100, 2), overThreshold.count(1), '/', pause_orver)
     print('全応答のうち200ms以上の間での応答割合：', round(overThreshold.count(
@@ -266,7 +269,7 @@ if __name__ == '__main__':
         pause, outou_b)
     print('間での応答数：', interval)
     print('そのうち200ms以上の語りの間での応答数：', overThreshold.count(1))
-    labelConversion(overThresholdData, outou_b_label)
+    labelConversion(overThresholdData, outou_b_label, overThreshold.count(1))
     print('200ms以上の語りの間における応答割合：', round(
         overThreshold.count(1)/pause_orver*100, 2), overThreshold.count(1), '/', pause_orver)
     print('全応答のうち200ms以上の間での応答割合：', round(overThreshold.count(
@@ -281,7 +284,7 @@ if __name__ == '__main__':
         pause, outou_c)
     print('間での応答数：', interval)
     print('そのうち200ms以上の語りの間での応答数：', overThreshold.count(1))
-    labelConversion(overThresholdData, outou_c_label)
+    labelConversion(overThresholdData, outou_c_label, overThreshold.count(1))
     print('200ms以上の語りの間における応答割合：', round(
         overThreshold.count(1)/pause_orver*100, 2), overThreshold.count(1), '/', pause_orver)
     print('全応答のうち200ms以上の間での応答割合：', round(overThreshold.count(

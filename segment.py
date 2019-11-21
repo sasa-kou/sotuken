@@ -257,11 +257,12 @@ def statistics_info(katari_data, outou_info, target):
 
     return count, data
 
-def labelConversion(targetData, outouLabelData):
+def labelConversion(targetData, outouLabelData, size):
     labelList = []  # 出現するラベルをすべて保存
     keyLabel = []   # ラベルの種類を保存
     tmp = {}
     result = []
+    parce = []
     for index in list(outouLabelData.keys()):
         for data in targetData[index]:
             time = list(data.keys())[0]
@@ -277,8 +278,9 @@ def labelConversion(targetData, outouLabelData):
 
     for k, v in sorted(tmp.items(), key=lambda x: -x[1]):
         result.append({k: v})
+        parce.append({k: round(v/size*100, 2)})
     print(result)
-
+    print(parce)
 
 if __name__ == '__main__':
     kt = Segment()
@@ -307,11 +309,11 @@ if __name__ == '__main__':
     count_meishi, data_meishi = statistics_info(katari, outou_a, '名詞')
     count_doushi, data_doushi = statistics_info(katari, outou_a, '動詞')
     print('文節での応答数：', count)
-    labelConversion(data, outou_label_a)
+    labelConversion(data, outou_label_a, count)
     print('名詞を含む文節での応答数：', count_meishi)
-    labelConversion(data_meishi, outou_label_a)
+    labelConversion(data_meishi, outou_label_a, count_meishi)
     print('動詞を含む文節での応答数：', count_doushi)
-    labelConversion(data_doushi, outou_label_a)
+    labelConversion(data_doushi, outou_label_a, count_doushi)
     print('全応答に対する割合：', round(count/num_a*100, 2), '% ', count, '/', num_a)
     print('全文節に対する割合：', round(count/num*100, 2), '% ', count, '/', num)
     print('名詞を含む文節に関する割合', round(count_meishi/length_meishi*100, 2),
@@ -325,11 +327,11 @@ if __name__ == '__main__':
     count_meishi, data_meishi = statistics_info(katari, outou_b, '名詞')
     count_doushi, data_doushi = statistics_info(katari, outou_b, '動詞')
     print('文節での応答数：', count)
-    labelConversion(data, outou_label_b)
+    labelConversion(data, outou_label_b, count)
     print('名詞を含む文節での応答数：', count_meishi)
-    labelConversion(data_meishi, outou_label_b)
+    labelConversion(data_meishi, outou_label_b, count_meishi)
     print('動詞を含む文節での応答数：', count_doushi)
-    labelConversion(data_doushi, outou_label_b)
+    labelConversion(data_doushi, outou_label_b, count_doushi)
     print('全応答に対する割合：', round(count/num_a*100, 2), '% ', count, '/', num_a)
     print('全文節に対する割合：', round(count/num*100, 2), '% ', count, '/', num)
     print('名詞を含む文節に関する割合', round(count_meishi/length_meishi*100, 2),
@@ -343,11 +345,11 @@ if __name__ == '__main__':
     count_meishi, data_meishi = statistics_info(katari, outou_c, '名詞')
     count_doushi, data_doushi = statistics_info(katari, outou_c, '動詞')
     print('文節での応答数：', count)
-    labelConversion(data, outou_label_c)
+    labelConversion(data, outou_label_c, count)
     print('名詞を含む文節での応答数：', count_meishi)
-    labelConversion(data_meishi, outou_label_c)
+    labelConversion(data_meishi, outou_label_c, count_meishi)
     print('動詞を含む文節での応答数：', count_doushi)
-    labelConversion(data_doushi, outou_label_c)
+    labelConversion(data_doushi, outou_label_c, count_doushi)
     print('全応答に対する割合：', round(count/num_a*100, 2), '% ', count, '/', num_a)
     print('全文節に対する割合：', round(count/num*100, 2), '% ', count, '/', num)
     print('名詞を含む文節に関する割合', round(count_meishi/length_meishi*100, 2),
