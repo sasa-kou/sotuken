@@ -164,7 +164,11 @@ class Segment:
             else:
                 word = data[0]
                 hinshi = data[1]
-                detail = hinshi + data[2] + data[3] + data[4]
+                detail = hinshi + data[2]
+                if hinshi == '名詞':
+                    detail += data[3] + data[4]
+                elif hinshi == '動詞':
+                    detail += data[6]
                 begin = float(data[num-1])
                 end = float(data[num])
                 time = [begin, end]
