@@ -99,10 +99,6 @@ class Segment:
     def __init__(self):
         self.katari = []
         self.katari_compare = {}    # {01-1: [{word: time}]}
-        self.hinshi = []
-        self.hinshi_compare = {}
-        self.detail = []
-        self.detail_compare = {}
         self.flag = False
 
     def read_data(self):  # 全ファイルを検索して読み込み(読み込み順は適当)
@@ -120,13 +116,9 @@ class Segment:
                         self.readKatari(targetFile)
                 num = file_index + '-' + index
                 self.katari_compare.update({num: self.katari})
-                self.hinshi_compare.update({num: self.hinshi})
-                self.detail_compare.update({num: self.detail})
                 self.katari = []
-                self.hinshi = []
-                self.detail = []
 
-        return self.katari_compare, self.hinshi_compare, self.detail_compare
+        return self.katari_compare
 
     def readKatari(self, file_name):
         file = open(file_name)  # データ入力
@@ -157,8 +149,6 @@ class Segment:
                     last_time = self.katari[-1]['time']
                     if 'pause' in last_word:
                         self.katari.pop(-1)
-                        self.hinshi.pop(-1)
-                        self.detail.pop(-1)
                         begin = last_time[0]
 
                 time = [begin, end]
@@ -179,28 +169,20 @@ class Segment:
                     tmpBegin = time[0]
                     flag = time[1]
                     self.katari.append({'word': word, 'time': time})
-                    self.hinshi.append({'word': hinshi, 'time': time})
-                    self.detail.append({'word': detail, 'time': time})
                 else:
                     if flag != time[0]:  # そのまま更新
                         self.katari.append(
-                            {'word': word, 'time': time, 'hinshi': [hinshi], 'detail': [detail]})
-                        self.hinshi.append({'word': hinshi, 'time': time})
-                        self.detail.append({'word': detail, 'time': time})
+                            {'word': word, 'time': time, 'hinshi': [hinshi], 'detail': [detail], 'flag': self.flag})
                     else:   # 時間を編集して更新
                         newTime = [tmpBegin, time[1]]
                         self.katari.pop(-1)
-                        self.hinshi.pop(-1)
-                        self.detail.pop(-1)
                         self.katari.append(
-                            {'word': word, 'time': newTime, 'hinshi': [hinshi], 'detail': [detail]})
-                        self.hinshi.append({'word': hinshi, 'time': newTime})
-                        self.detail.append({'word': detail, 'time': newTime})
+                            {'word': word, 'time': newTime, 'hinshi': [hinshi], 'detail': [detail], 'flag': self.flag})
                     self.flag = False
             else:
                 if 'pause' not in hinshi:
-                    self.katari[-1]['hinshi'].append(hinshi)
-                    self.katari[-1]['detail'].append(detail)
+                    self.katari.append({'word': word, 'time': newTime,
+                                        'hinshi': [hinshi], 'detail': [detail], 'flag': self.flag})
         file.close()
 
     def labelGroupCount(self):  # groupの数をカウント
@@ -222,7 +204,20 @@ class Segment:
 
 
 def statistics_group(katari_data, outou_info):   # 品詞を含む
-    katari_info = copy.deepcopy(katari_data)
+    katari_value = copy.deepcopy(katari_data)
+    katari_info = {}
+    for index in list(katari_value):    # 文節のみを抽出
+        katari_info[index] = []
+        for data in katari_value[index]:
+            flag = data['flag']
+            if flag:
+                katari_info[index].append(data)
+            else:
+                hinshi = data['hinshi'][0]
+                detail = data['detail'][0]
+                katari_info[index][-1]['hinshi'].append(hinshi)
+                katari_info[index][-1]['detail'].append(detail)
+
     count = 0
     data_detail = {}
     for index in list(katari_info):
@@ -248,13 +243,15 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
     return data_detail
 
 
-def labelGroupConversion(targetData, outouLabelData, tmpData, fileName):
+def labelGroupConversion(targetData, outouLabelData, fileName):
     labelList = []
     allLabelList = []
-    for value in tmpData:  # データを格納する変数の初期化
-        labelList.append(value['group'])
-        allLabelList.append(
-            {'group': value['group'], 'labelList': [], 'keyLabelList': []})
+    for index in list(targetData):  # ラベルリストの生成
+        for data in targetData[index]:
+            labelList.append(data['group'])
+            allLabelList.append(
+            {'group': data['group'], 'labelList': [], 'keyLabelList': []})
+
     for index in list(outouLabelData.keys()):   # countのためにlabelList,keyLabelListを取得
         for data in targetData[index]:
             group = data['group']   # keyとなる品詞グループ
@@ -319,8 +316,7 @@ def labelGroupConversion(targetData, outouLabelData, tmpData, fileName):
 
 if __name__ == '__main__':
     kt = Segment()
-    katari, hinshi, detail = kt.read_data()
-    groupNum = kt.labelGroupCount()
+    katari = kt.read_data()
 
     ot = Outou('a')
     outou_a, outou_label_a = ot.read_data()
@@ -331,7 +327,7 @@ if __name__ == '__main__':
 
     print('A')
     group_data = statistics_group(katari, outou_a)
-    labelGroupConversion(group_data, outou_label_a, groupNum, 'A')
+    labelGroupConversion(group_data, outou_label_a, 'A')
 """
     print('B')
     group_data = statistics_group(katari, outou_b)

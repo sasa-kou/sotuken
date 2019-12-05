@@ -1,24 +1,7 @@
 test.py
-result.txt
 cop.py
-toukeiResult.txt
-toukeiResultA.txt
-toukeiResultB.txt
-toukeiResultC.txt
-toukeiLabela.txt
-toukeiLabelb.txt
-toukeiLabelc.txt
-pauseResult.txt
-disagreementResult.txt
-katariCount.txt
-hinshiCount.txt
-detailCount.txt
-disagreementPercentage.txt
-
 toukei_cp.py
 pause_cp.py
 disagreement_cp.py
 
-segmentSizeA.txt
-segmentSizeB.txt
-segmentSizeC.txt
+*.txt
