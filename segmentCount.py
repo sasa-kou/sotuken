@@ -6,7 +6,6 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
-fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -185,23 +184,6 @@ class Segment:
                                         'hinshi': [hinshi], 'detail': [detail], 'flag': self.flag})
         file.close()
 
-    def labelGroupCount(self):  # groupの数をカウント
-        labelGroupList = []
-        keyLabelGroup = []
-        result = []
-        for index in list(self.katari_compare):
-            for data in self.katari_compare[index]:
-                labelGroup = data['hinshi']
-                labelGroupList.append(labelGroup)
-
-        for groupData in labelGroupList:
-            if groupData not in keyLabelGroup:
-                keyLabelGroup.append(groupData)
-                result.append(
-                    {'group': groupData, 'length': labelGroupList.count(groupData)})
-
-        return result
-
 
 def statistics_group(katari_data, outou_info):   # 品詞を含む
     katari_value = copy.deepcopy(katari_data)
@@ -250,7 +232,7 @@ def labelGroupConversion(targetData, outouLabelData, fileName):
         for data in targetData[index]:
             labelList.append(data['group'])
             allLabelList.append(
-            {'group': data['group'], 'labelList': [], 'keyLabelList': []})
+                {'group': data['group'], 'labelList': [], 'keyLabelList': []})
 
     for index in list(outouLabelData.keys()):   # countのためにlabelList,keyLabelListを取得
         for data in targetData[index]:
