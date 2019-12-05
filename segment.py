@@ -231,6 +231,23 @@ class Segment:
 
         return result
 
+    def labelGroupCount(self):  # groupの数をカウント
+        labelGroupList = []
+        keyLabelGroup = []
+        result = []
+        for index in list(self.katari_compare):
+            for data in self.katari_compare[index]:
+                labelGroup = data['hinshi']
+                labelGroupList.append(labelGroup)
+
+        for groupData in labelGroupList:
+            if groupData not in keyLabelGroup:
+                keyLabelGroup.append(groupData)
+                result.append(
+                    {'group': groupData, 'length': labelGroupList.count(groupData)})
+
+        return result
+
     def count(self):
         count = 0
         for index in list(self.katari_compare.keys()):
@@ -238,7 +255,7 @@ class Segment:
         return count
 
 
-def statistics_count(katari_data, outou_info):
+def statistics_count(katari_data, outou_info):  # 文節オンリー
     katari_info = copy.deepcopy(katari_data)
     data = {}
     count = 0
@@ -253,11 +270,11 @@ def statistics_count(katari_data, outou_info):
                 if start <= outou_time and outou_time < end:
                     count += 1
                     data[index].append(outou)
-                    break
+
     return count, data
 
 
-def statistics_info(katari_data, outou_info, target, detailData):
+def statistics_info(katari_data, outou_info, target, detailData):   # 品詞を含む
     katari_info = copy.deepcopy(katari_data)
     detailList = list(detailData.keys())
     count = 0
@@ -292,6 +309,34 @@ def statistics_info(katari_data, outou_info, target, detailData):
                             count_detail[detail] += 1
 
     return count, data, count_detail, data_detail
+
+
+def statistics_group(katari_data, outou_info):   # 品詞を含む
+    katari_info = copy.deepcopy(katari_data)
+    count = 0
+    data_detail = {}
+    for index in list(katari_info):
+        data[index] = []
+        data_detail[index] = []
+        for katari in katari_info[index]:
+            katari_time = katari['time']
+            start = katari_time[0]
+            end = katari_time[1]
+            for outou in outou_info[index]:
+                outou_time = list(outou.keys())[0]
+                if start <= outou_time and outou_time < end:
+                    # num = katari_info[index].index(katari)
+                    # num2 = outou_info[index].index(outou)
+                    # 応答があった一つ前の文節が対象
+                    popIndex = katari_info[index].index(katari) - 1
+                    # print(katari_info[index][popIndex], outou_info[index][num2])
+                    label = katari_info[index][popIndex]['hinshi']
+                    value = {'group': label}
+                    value.update({'outou': outou})
+                    data_detail[index].append(value)
+                    count += 1
+
+    return data_detail
 
 
 def labelConversion(targetData, outouLabelData, size):
@@ -359,6 +404,76 @@ def labelDetailConversion(targetData, outouLabelData, size):
     print()
 
 
+def labelGroupConversion(targetData, outouLabelData, tmpData):
+    labelList = []
+    allLabelList = []
+    for value in tmpData:  # データを格納する変数の初期化
+        labelList.append(value['group'])
+        allLabelList.append(
+            {'group': value['group'], 'labelList': [], 'keyLabelList': []})
+    for index in list(outouLabelData.keys()):   # countのためにlabelList,keyLabelListを取得
+        for data in targetData[index]:
+            group = data['group']   # keyとなる品詞グループ
+            time = list(data['outou'].keys())[0]    # 応答側のkeyとなる時間
+            value = list(filter(lambda x: time == list(
+                x.keys())[0], outouLabelData[index]))[0]
+            label = list(value.values())[0]  # 応答ラベル
+            target = list(filter(lambda x: group == x['group'], allLabelList))[
+                0]   # 変更先を取得
+            num = allLabelList.index(target)    # insert時に使用するindexを取得
+            target['labelList'].append(label)   # labelListを更新
+            if label not in target['keyLabelList']:  # keyLabelを更新
+                target['keyLabelList'].append(label)
+            del allLabelList[num]
+            allLabelList.insert(num, target)
+
+    result = list(filter(lambda x: len(x['labelList']) != 0, allLabelList))
+
+    for data in result:  # groupごとのサイズを取得
+        length = len(data['labelList'])
+        data.update({'size': length})
+    value = sorted(result, key=lambda x: -x['size'])    # sizeでsort
+
+
+    for data in value:  # 数をカウントして並べなおす
+        tmp = {}
+        count = {'labelCount': [], 'parce': []}
+        labelList = data['labelList']
+        group = data['group']   # keyとなるgroup
+        size = data['size']    # groupのlength
+
+        for label in data['keyLabelList']:
+            tmp.update({label: labelList.count(label)})
+
+        for k, v in sorted(tmp.items(), key=lambda x: -x[1]):
+            count['labelCount'].append({k: v})
+            count['parce'].append({k: round(v/size*100, 2)})
+
+        del data['labelList']   # データ整形
+        del data['keyLabelList']
+        data.update(count)
+
+    filePath = 'segmentSize.txt'
+    with open(filePath, mode='w') as f:
+        f.write('')
+
+    for data in value:
+        for k, v in data.items():
+            if k == 'group':
+                with open(filePath, mode='a') as f:
+                    f.write('文節の組み合わせ：' + str(v) + '\n')
+            elif k == 'labelCount':
+                with open(filePath, mode='a') as f:
+                    f.write('ラベルの内訳　　：' + str(v) + '\n')
+            elif k == 'parce':
+                with open(filePath, mode='a') as f:
+                    f.write('ラベルパーセント：' + str(v) + '\n')
+            
+        with open(filePath, mode='a') as f:
+            f.write('\n')
+    # pprint.pprint(result, width=80, compact=True)
+
+
 if __name__ == '__main__':
     kt = Segment()
     katari, hinshi, detail = kt.read_data()
@@ -367,6 +482,7 @@ if __name__ == '__main__':
 
     meishi, length_meishi = kt.labelCount('名詞')
     doushi, length_doushi = kt.labelCount('動詞')
+    groupNum = kt.labelGroupCount()
     print('名詞を含む文節の数', length_meishi)
     meishiList = kt.labelDetailCount(meishi, '名詞')
     print(meishiList)
@@ -395,6 +511,9 @@ if __name__ == '__main__':
     print('文節での応答数：', count)
     labelConversion(data, outou_label_a, count)
     print()
+    group_data = statistics_group(katari, outou_a)
+    labelGroupConversion(group_data, outou_label_a, groupNum)
+"""
     print('名詞を含む文節での応答数：', count_meishi)
     labelConversion(data_meishi, outou_label_a, count_meishi)
     print(count_meishi_detail)
@@ -412,6 +531,7 @@ if __name__ == '__main__':
           '% ', count_meishi, '/', length_meishi)
     print('動詞を含む文節に関する割合', round(count_doushi/length_doushi*100, 2),
           '% ', count_doushi, '/', length_doushi)
+
 
     print('B')
     print('応答数：', num_b)
@@ -468,3 +588,4 @@ if __name__ == '__main__':
           '% ', count_meishi, '/', length_meishi)
     print('動詞を含む文節に関する割合', round(count_doushi/length_doushi*100, 2),
           '% ', count_doushi, '/', length_doushi)
+"""
