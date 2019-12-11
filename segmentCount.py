@@ -6,6 +6,7 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
+fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -208,13 +209,14 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
             katari_time = katari['time']
             start = katari_time[0]
             end = katari_time[1]
+            popIndex = katari_info[index].index(katari) - 1
+            # 応答文字列の取得
             for outou in outou_info[index]:
                 outou_time = list(outou.keys())[0]
                 if start <= outou_time and outou_time < end:
                     # num = katari_info[index].index(katari)
                     # num2 = outou_info[index].index(outou)
                     # 応答があった一つ前の文節が対象
-                    popIndex = katari_info[index].index(katari) - 1
                     # print(katari_info[index][popIndex], outou_info[index][num2])
                     label = katari_info[index][popIndex]['hinshi']
                     value = {'group': label}
@@ -222,6 +224,7 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
                     data_detail[index].append(value)
                     count += 1
 
+    print('CH', count)
     return data_detail
 
 
@@ -283,18 +286,76 @@ def labelGroupConversion(targetData, outouLabelData, fileName):
         for k, v in data.items():
             if k == 'group':
                 with open(filePath, mode='a') as f:
-                    f.write('文節の組み合わせ：' + str(v) + '\n')
+                    f.write('文節の組み合わせ:' + ','.join(v) + '\n')
             elif k == 'labelCount':
                 with open(filePath, mode='a') as f:
-                    f.write('ラベルの内訳　　：' + str(v) + '\n')
+                    f.write('ラベルの内訳　　:' + str(v) + '\n')
             elif k == 'parce':
                 with open(filePath, mode='a') as f:
-                    f.write('ラベルパーセント：' + str(v) + '\n')
+                    f.write('ラベルパーセント:' + str(v) + '\n')
 
         with open(filePath, mode='a') as f:
             f.write('\n')
     # pprint.pprint(result, width=80, compact=True)
 
+
+def writeConversationData(targetData, katariData, outouData, outouLabelData):
+    count = 0
+    result = []
+    for index in list(katariData):
+        content = ''
+        segmentlabelList = []
+        for katari in katariData[index]:
+            flag = katari['flag']
+            word = katari['word']
+            hinshi = katari['hinshi'][0]
+            # 文節ごとの語り文字列と対応する応答文字列の取得
+            if flag:
+                start = katari['time'][0]
+                end = katari['time'][1]
+                for outou in outouData[index]:
+                    outouTime = list(outou.keys())[0]
+                    if start <= outouTime and outouTime < end:
+                        count += 1
+                        outouText = list(outou.values())[0]
+                        label = list(filter(lambda x: list(x.keys())[0]
+                                            == outouTime, outouLabelData[index]))[0]
+                        outouLabel = list(label.values())[0]
+                        data = {'content': content}
+                        data.update({'group': segmentlabelList})
+                        data.update({'outouText': outouText})
+                        data.update({'outouLabel': outouLabel})
+                        # print(data)
+                        result.append(data)
+                content = word
+                segmentlabelList = [hinshi]
+            else:
+                content += word  # 文節の語り文字列の更新
+                segmentlabelList.append(hinshi)
+
+    return result
+
+
+def segmentContent(conversationData, path):
+    segmentLabelList = []
+    filePath = 'segmentSize' + path + '.txt'
+    file = open(filePath)
+    lines = file.readlines()
+
+    for data in lines:
+        data = data.rstrip('\n')
+        data = data.split(':')
+        if data[0] == '文節の組み合わせ':
+            segmentLabelList.append(data[1].split(','))
+        else:
+            continue
+
+    count = 0
+    for group in segmentLabelList:
+        print(group)
+        value = list(filter(lambda x: x['group'] == group,conversationData))
+        count += len(value)
+        print(value)
 
 if __name__ == '__main__':
     kt = Segment()
@@ -307,9 +368,12 @@ if __name__ == '__main__':
     ot = Outou('c')
     outou_c, outou_label_c = ot.read_data()
 
-    print('A')
     group_data = statistics_group(katari, outou_a)
     labelGroupConversion(group_data, outou_label_a, 'A')
+    print('fileWrite at segmentSizeA.txt')
+    conversationData = writeConversationData(
+        group_data, katari, outou_a, outou_label_a)
+    segmentContent(conversationData, 'A')
 """
     print('B')
     group_data = statistics_group(katari, outou_b)

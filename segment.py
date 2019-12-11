@@ -418,7 +418,6 @@ if __name__ == '__main__':
     print('動詞を含む文節に関する割合', round(count_doushi/length_doushi*100, 2),
           '% ', count_doushi, '/', length_doushi)
 
-
     print('B')
     print('応答数：', num_b)
     count, data = statistics_count(katari, outou_b)
