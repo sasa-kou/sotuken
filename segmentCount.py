@@ -6,7 +6,6 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
-fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -223,7 +222,6 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
                     value.update({'outou': outou})
                     data_detail[index].append(value)
                     count += 1
-
     print('CH', count)
     return data_detail
 
@@ -286,13 +284,15 @@ def labelGroupConversion(targetData, outouLabelData, fileName):
         for k, v in data.items():
             if k == 'group':
                 with open(filePath, mode='a') as f:
-                    f.write('文節の組み合わせ:' + ','.join(v) + '\n')
+                    f.write('文節の組み合わせ| ' + ','.join(v) + '\n')
             elif k == 'labelCount':
                 with open(filePath, mode='a') as f:
-                    f.write('ラベルの内訳　　:' + str(v) + '\n')
+                    labelListData = list(map(lambda x: list(x.keys())[0], v))
+                    f.write('応答ラベルリスト| ' + ','.join(labelListData) + '\n')
+                    f.write('応答ラベルの内訳| ' + str(v) + '\n')
             elif k == 'parce':
                 with open(filePath, mode='a') as f:
-                    f.write('ラベルパーセント:' + str(v) + '\n')
+                    f.write('ラベルパーセント| ' + str(v) + '\n')
 
         with open(filePath, mode='a') as f:
             f.write('\n')
@@ -337,25 +337,44 @@ def writeConversationData(targetData, katariData, outouData, outouLabelData):
 
 
 def segmentContent(conversationData, path):
+    print('CH', len(conversationData))
     segmentLabelList = []
+    labelListData = []
     filePath = 'segmentSize' + path + '.txt'
+    writePath = 'sentenceContent' + path + '.txt'
+    with open(writePath, mode='w') as f:
+        f.write('')
     file = open(filePath)
     lines = file.readlines()
 
     for data in lines:
         data = data.rstrip('\n')
-        data = data.split(':')
+        data = data.split('| ')
         if data[0] == '文節の組み合わせ':
             segmentLabelList.append(data[1].split(','))
+        elif data[0] == '応答ラベルリスト':
+            labelListData.append(data[1].split(','))
         else:
             continue
 
-    count = 0
-    for group in segmentLabelList:
-        print(group)
-        value = list(filter(lambda x: x['group'] == group,conversationData))
-        count += len(value)
-        print(value)
+    for group, labelList in zip(segmentLabelList, labelListData):
+        with open(writePath, mode='a') as f:
+            f.write('文節の品詞の組み合わせ: ' + str(group) + '\n')
+        value = list(filter(lambda x: x['group'] == group, conversationData))
+        for label in labelList:
+            content = list(filter(lambda x: label == x['outouLabel'], value))
+            with open(writePath, mode='a') as f:
+                f.write('応答のラベル: ' + str(label) + '\n')
+            for data in content:
+                with open(writePath, mode='a') as f:
+                    f.write('文節: ' + str(data['content']) + '\n')
+                    f.write('応答: ' + str(data['outouText']) + '\n')
+            with open(writePath, mode='a') as f:
+                f.write('\n')
+        with open(writePath, mode='a') as f:
+            f.write('\n')
+    print('fileWrite at ' + writePath)
+
 
 if __name__ == '__main__':
     kt = Segment()
