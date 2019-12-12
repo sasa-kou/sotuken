@@ -6,6 +6,7 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
+fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -50,22 +51,17 @@ class Outou:
 
             # 例外処理 ＋　退避させた文字の破棄
             if num == 0:
-                tmp_str = ""
                 continue
             elif data[0] == "silB" or data[0] == "silE":
                 tmp_str = ""
                 continue
             elif data[0] == "sp" or data[0] == "pause":
-                tmp_str = ""
                 continue
             elif data[0] == "(" or data[0] == ")" or data[0] == "?":
-                tmp_str = ""
                 continue
             elif data[0] == 'G' or data[0] == "D" or data[0] == "F" or data[0] == "U":
-                tmp_str = ""
                 continue
             elif data[1] == "補助記号":
-                tmp_str = ""
                 continue
 
             if 'label' in data[num]:
@@ -77,7 +73,7 @@ class Outou:
 
                 self.outou.append({begin: word})
                 self.outou_label.append({begin: label})
-
+                tmp_str = ""
             else:
                 tmp_str += data[0]  # 文字の退避
 
@@ -222,7 +218,6 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
                     value.update({'outou': outou})
                     data_detail[index].append(value)
                     count += 1
-    print('CH', count)
     return data_detail
 
 
@@ -317,13 +312,13 @@ def writeConversationData(targetData, katariData, outouData, outouLabelData):
                     outouTime = list(outou.keys())[0]
                     if start <= outouTime and outouTime < end:
                         count += 1
-                        outouText = list(outou.values())[0]
                         label = list(filter(lambda x: list(x.keys())[0]
                                             == outouTime, outouLabelData[index]))[0]
                         outouLabel = list(label.values())[0]
                         data = {'content': content}
+                        data.update({'clauseTime': [start, end]})
                         data.update({'group': segmentlabelList})
-                        data.update({'outouText': outouText})
+                        data.update({'outou': outou})
                         data.update({'outouLabel': outouLabel})
                         # print(data)
                         result.append(data)
@@ -337,7 +332,6 @@ def writeConversationData(targetData, katariData, outouData, outouLabelData):
 
 
 def segmentContent(conversationData, path):
-    print('CH', len(conversationData))
     segmentLabelList = []
     labelListData = []
     filePath = 'segmentSize' + path + '.txt'
@@ -368,7 +362,7 @@ def segmentContent(conversationData, path):
             for data in content:
                 with open(writePath, mode='a') as f:
                     f.write('文節: ' + str(data['content']) + '\n')
-                    f.write('応答: ' + str(data['outouText']) + '\n')
+                    f.write('応答: ' + str(data['outou']) + '\n')
             with open(writePath, mode='a') as f:
                 f.write('\n')
         with open(writePath, mode='a') as f:
@@ -392,13 +386,18 @@ if __name__ == '__main__':
     print('fileWrite at segmentSizeA.txt')
     conversationData = writeConversationData(
         group_data, katari, outou_a, outou_label_a)
-    segmentContent(conversationData, 'A')
-"""
-    print('B')
-    group_data = statistics_group(katari, outou_b)
-    labelGroupConversion(group_data, outou_label_b, groupNum, 'B')
+    #segmentContent(conversationData, 'A')
 
-    print('C')
+    group_data = statistics_group(katari, outou_b)
+    labelGroupConversion(group_data, outou_label_b, 'B')
+    print('fileWrite at segmentSizeB.txt')
+    conversationData = writeConversationData(
+        group_data, katari, outou_b, outou_label_b)
+    #segmentContent(conversationData, 'B')
+
     group_data = statistics_group(katari, outou_c)
-    labelGroupConversion(group_data, outou_label_c, groupNum, 'C')
-"""
+    labelGroupConversion(group_data, outou_label_c, 'C')
+    print('fileWrite at segmentSizeC.txt')
+    conversationData = writeConversationData(
+        group_data, katari, outou_c, outou_label_c)
+    #segmentContent(conversationData, 'C')
