@@ -375,32 +375,35 @@ def segmentContent(conversationData, path):
 
 
 def comparison(a, b, c):
-    valueA = {}  # {文節の開始時間:文節の内容}
-    valueB = {}
-    valueC = {}
+    valueA = []  # [{文節の開始時間:文節の内容}]
+    valueB = []
+    valueC = []
     for data in a:
-        valueA.update({data['clauseTime'][0]: data['content']})
+        valueA.append((data['clauseTime'][0], data['content']))
     for data in b:
-        valueB.update({data['clauseTime'][0]: data['content']})
+        valueB.append((data['clauseTime'][0], data['content']))
     for data in c:
-        valueC.update({data['clauseTime'][0]: data['content']})
+        valueC.append((data['clauseTime'][0], data['content']))
     # print(valueA)
     # print(valueB)
     # print(valueC)
-    # 対称差集合により一度しか出現しない要素を取得
-    aloneContent = list(valueA.items() ^ valueB.items() ^ valueC.items())
 
-    for data in aloneContent:   # ３つとも含まれる物を削除
-        if data in valueA.items() and data in valueB.items() and data in valueC.items():
-            aloneContent.remove(data)
+    # 対称差集合により一度しか出現しない要素を取得(不完全)
+    compositeContent = list(set(valueA) ^ set(valueB) ^ set(valueC))
+    # ３人ともに含まれる物を削除
+    aloneContent = []   # 一度しか出現しないリスト
+    for data in compositeContent:
+        if not (data in valueA and data in valueB and data in valueC):
+            aloneContent.append(data)
 
     aloneConversation = []
     aloneConflictConversation = []
-    for key in aloneContent:    # 一人しか応答していない文節応答を抜き出す
-        if key in valueA.items():
+    for key in compositeContent:    # 一人しか応答していない文節応答を抜き出す
+        if key in valueA:
             content = list(filter(
-                lambda x: x['clauseTime'][0] == key[0], a))
+                lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
             for value in content:
+                # a.remove(value) # 二人以上の応答に更新
                 if value['outouLabel'] == 'あいづち':
                     text = 'A ' + value['content'] + ' ' + str(value['outou'])
                     aloneConflictConversation.append(text)
@@ -409,10 +412,11 @@ def comparison(a, b, c):
                         str(value['outou']) + ' ' + value['outouLabel']
                     aloneConversation.append(text)
 
-        elif key in valueB.items():
+        elif key in valueB:
             content = list(filter(
-                lambda x: x['clauseTime'][0] == key[0], b))
+                lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], b))
             for value in content:
+                # b.remove(value)
                 if value['outouLabel'] == 'あいづち':
                     text = 'B ' + value['content'] + ' ' + str(value['outou'])
                     aloneConflictConversation.append(text)
@@ -421,10 +425,11 @@ def comparison(a, b, c):
                         str(value['outou']) + ' ' + value['outouLabel']
                     aloneConversation.append(text)
 
-        elif key in valueC.items():
+        elif key in valueC:
             content = list(filter(
-                lambda x: x['clauseTime'][0] == key[0], c))
+                lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], c))
             for value in content:
+                # c.remove(value)
                 if value['outouLabel'] == 'あいづち':
                     text = 'C ' + value['content'] + ' ' + str(value['outou'])
                     aloneConflictConversation.append(text)
@@ -439,6 +444,7 @@ def comparison(a, b, c):
     with open('aloneConversation.txt', mode='w') as f:
         f.write('')
 
+    # ファイルに書き込む
     for data in aloneConflictConversation:
         with open('aloneConflict.txt', mode='a') as f:
             f.write(data + '\n')
@@ -447,6 +453,7 @@ def comparison(a, b, c):
         with open('aloneConversation.txt', mode='a') as f:
             f.write(data + '\n')
     print('fileWrite at aloneConversation.txt : ３人のうち一人だけしかしていない文節応答（あいづち以外）')
+    print(len(aloneConversation), len(aloneConflictConversation))
 
 
 if __name__ == '__main__':
