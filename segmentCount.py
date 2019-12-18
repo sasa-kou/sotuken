@@ -218,6 +218,8 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
                     value.update({'outou': outou})
                     data_detail[index].append(value)
                     count += 1
+
+    # print('CH', count)
     return data_detail
 
 
@@ -310,6 +312,7 @@ def writeConversationData(targetData, katariData, outouData, outouLabelData):
                 end = katari['time'][1]
                 for outou in outouData[index]:
                     outouTime = list(outou.keys())[0]
+                    outouText = list(outou.values())[0]
                     if start <= outouTime and outouTime < end:
                         count += 1
                         label = list(filter(lambda x: list(x.keys())[0]
@@ -328,6 +331,7 @@ def writeConversationData(targetData, katariData, outouData, outouLabelData):
                 content += word  # 文節の語り文字列の更新
                 segmentlabelList.append(hinshi)
 
+    # print('CH', count)
     return result
 
 
@@ -370,6 +374,81 @@ def segmentContent(conversationData, path):
     print('fileWrite at ' + writePath)
 
 
+def comparison(a, b, c):
+    valueA = {}  # {文節の開始時間:文節の内容}
+    valueB = {}
+    valueC = {}
+    for data in a:
+        valueA.update({data['clauseTime'][0]: data['content']})
+    for data in b:
+        valueB.update({data['clauseTime'][0]: data['content']})
+    for data in c:
+        valueC.update({data['clauseTime'][0]: data['content']})
+    # print(valueA)
+    # print(valueB)
+    # print(valueC)
+    # 対称差集合により一度しか出現しない要素を取得
+    aloneContent = list(valueA.items() ^ valueB.items() ^ valueC.items())
+
+    for data in aloneContent:   # ３つとも含まれる物を削除
+        if data in valueA.items() and data in valueB.items() and data in valueC.items():
+            aloneContent.remove(data)
+
+    aloneConversation = []
+    aloneConflictConversation = []
+    for key in aloneContent:    # 一人しか応答していない文節応答を抜き出す
+        if key in valueA.items():
+            content = list(filter(
+                lambda x: x['clauseTime'][0] == key[0], a))
+            for value in content:
+                if value['outouLabel'] == 'あいづち':
+                    text = 'A ' + value['content'] + ' ' + str(value['outou'])
+                    aloneConflictConversation.append(text)
+                else:
+                    text = 'A ' + value['content'] + ' ' + \
+                        str(value['outou']) + ' ' + value['outouLabel']
+                    aloneConversation.append(text)
+
+        elif key in valueB.items():
+            content = list(filter(
+                lambda x: x['clauseTime'][0] == key[0], b))
+            for value in content:
+                if value['outouLabel'] == 'あいづち':
+                    text = 'B ' + value['content'] + ' ' + str(value['outou'])
+                    aloneConflictConversation.append(text)
+                else:
+                    text = 'B ' + value['content'] + ' ' + \
+                        str(value['outou']) + ' ' + value['outouLabel']
+                    aloneConversation.append(text)
+
+        elif key in valueC.items():
+            content = list(filter(
+                lambda x: x['clauseTime'][0] == key[0], c))
+            for value in content:
+                if value['outouLabel'] == 'あいづち':
+                    text = 'C ' + value['content'] + ' ' + str(value['outou'])
+                    aloneConflictConversation.append(text)
+                else:
+                    text = 'C ' + value['content'] + ' ' + \
+                        str(value['outou']) + ' ' + value['outouLabel']
+                    aloneConversation.append(text)
+
+    # ファイルの初期化
+    with open('aloneConflict.txt', mode='w') as f:
+        f.write('')
+    with open('aloneConversation.txt', mode='w') as f:
+        f.write('')
+
+    for data in aloneConflictConversation:
+        with open('aloneConflict.txt', mode='a') as f:
+            f.write(data + '\n')
+    print('fileWrite at aloneConflict.txt : ３人のうち一人だけしかしていない文節応答（あいづちのみ）')
+    for data in aloneConversation:
+        with open('aloneConversation.txt', mode='a') as f:
+            f.write(data + '\n')
+    print('fileWrite at aloneConversation.txt : ３人のうち一人だけしかしていない文節応答（あいづち以外）')
+
+
 if __name__ == '__main__':
     kt = Segment()
     katari = kt.read_data()
@@ -383,21 +462,23 @@ if __name__ == '__main__':
 
     group_data = statistics_group(katari, outou_a)
     labelGroupConversion(group_data, outou_label_a, 'A')
-    print('fileWrite at segmentSizeA.txt')
-    conversationData = writeConversationData(
+    print('fileWrite at segmentSizeA.txt : 文節の組み合わせと応答の関係')
+    conversationDataA = writeConversationData(
         group_data, katari, outou_a, outou_label_a)
-    #segmentContent(conversationData, 'A')
+    #segmentContent(conversationDataA, 'A')
 
     group_data = statistics_group(katari, outou_b)
     labelGroupConversion(group_data, outou_label_b, 'B')
-    print('fileWrite at segmentSizeB.txt')
-    conversationData = writeConversationData(
+    print('fileWrite at segmentSizeB.txt : 文節の組み合わせと応答の関係')
+    conversationDataB = writeConversationData(
         group_data, katari, outou_b, outou_label_b)
-    #segmentContent(conversationData, 'B')
+    #segmentContent(conversationDataB, 'B')
 
     group_data = statistics_group(katari, outou_c)
     labelGroupConversion(group_data, outou_label_c, 'C')
-    print('fileWrite at segmentSizeC.txt')
-    conversationData = writeConversationData(
+    print('fileWrite at segmentSizeC.txt : 文節の組み合わせと応答の関係')
+    conversationDataC = writeConversationData(
         group_data, katari, outou_c, outou_label_c)
-    #segmentContent(conversationData, 'C')
+    #segmentContent(conversationDataC, 'C')
+
+    comparison(conversationDataA, conversationDataB, conversationDataC)
