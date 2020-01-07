@@ -396,9 +396,61 @@ def comparison(a, b, c):
         if not (data in valueA and data in valueB and data in valueC):
             aloneContent.append(data)
 
+    # 複数人が応答している文節応答を抜き出す(重複してる要素も削除)
+    with open('moreConflictResponse.txt', mode='w') as f:
+        f.write('')
+    with open('moreResponse.txt', mode='a') as f:
+        f.write('')
+
+    allValue = valueA + valueB + valueC
+    moreResponse = list(set(allValue) ^ set(aloneContent))
+    moreConflictConversation = {}
+    moreConversation = {}
+    for key in moreResponse:
+        moreConflictConversation[key] = []
+        moreConversation[key] = []
+        textList = []
+        if key in valueA:
+            content = list(filter(
+                lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
+            for value in content:
+                if value['outouLabel'] == 'あいづち':
+                    text = 'A ' + str(value['outou']) + ' ' + value['outouLabel']
+                    moreConflictConversation[key].append(text)
+                else:
+                    text = text = 'A ' + \
+                        str(value['outou']) + ' ' + value['outouLabel']
+                    moreConversation[key].append(text)
+        if key in valueB:
+            content = list(filter(
+                lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], b))
+            for value in content:
+                if value['outouLabel'] == 'あいづち':
+                    text = 'B ' + str(value['outou']) + ' ' + value['outouLabel']
+                    moreConflictConversation[key].append(text)
+                else:
+                    text = text = 'B ' + \
+                        str(value['outou']) + ' ' + value['outouLabel']
+                    moreConversation[key].append(text)
+        if key in valueC:
+            content = list(filter(
+                lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], c))
+            for value in content:
+                if value['outouLabel'] == 'あいづち':
+                    text = 'C ' + str(value['outou']) + ' ' + value['outouLabel']
+                    moreConflictConversation[key].append(text)
+                else:
+                    text = text = 'C ' + \
+                        str(value['outou']) + ' ' + value['outouLabel']
+                    moreConversation[key].append(text)
+
+    print(moreConversation)
+    print(len(moreConversation), len(moreResponse))
+
+    # 一人しか応答していない文節応答を抜き出す
     aloneConversation = []
     aloneConflictConversation = []
-    for key in compositeContent:    # 一人しか応答していない文節応答を抜き出す
+    for key in aloneContent:
         if key in valueA:
             content = list(filter(
                 lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
@@ -472,20 +524,20 @@ if __name__ == '__main__':
     print('fileWrite at segmentSizeA.txt : 文節の組み合わせと応答の関係')
     conversationDataA = writeConversationData(
         group_data, katari, outou_a, outou_label_a)
-    #segmentContent(conversationDataA, 'A')
+    # segmentContent(conversationDataA, 'A')
 
     group_data = statistics_group(katari, outou_b)
     labelGroupConversion(group_data, outou_label_b, 'B')
     print('fileWrite at segmentSizeB.txt : 文節の組み合わせと応答の関係')
     conversationDataB = writeConversationData(
         group_data, katari, outou_b, outou_label_b)
-    #segmentContent(conversationDataB, 'B')
+    # segmentContent(conversationDataB, 'B')
 
     group_data = statistics_group(katari, outou_c)
     labelGroupConversion(group_data, outou_label_c, 'C')
     print('fileWrite at segmentSizeC.txt : 文節の組み合わせと応答の関係')
     conversationDataC = writeConversationData(
         group_data, katari, outou_c, outou_label_c)
-    #segmentContent(conversationDataC, 'C')
+    # segmentContent(conversationDataC, 'C')
 
     comparison(conversationDataA, conversationDataB, conversationDataC)
