@@ -3,5 +3,6 @@ cop.py
 toukei_cp.py
 pause_cp.py
 disagreement_cp.py
+segmentCount_cp.py
 
 *.txt
