@@ -397,25 +397,20 @@ def comparison(a, b, c):
             aloneContent.append(data)
 
     # 複数人が応答している文節応答を抜き出す(重複してる要素も削除)
-    with open('moreConflictResponse.txt', mode='w') as f:
-        f.write('')
-    with open('moreResponse.txt', mode='a') as f:
-        f.write('')
-
     allValue = valueA + valueB + valueC
-    moreResponse = list(set(allValue) ^ set(aloneContent))
+    moreResponse = list(set(allValue) ^ set(aloneContent))  # 複数人の応答
     moreConflictConversation = {}
     moreConversation = {}
+
     for key in moreResponse:
         moreConflictConversation[key] = []
         moreConversation[key] = []
-        textList = []
         if key in valueA:
             content = list(filter(
                 lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
             for value in content:
                 if value['outouLabel'] == 'あいづち':
-                    text = 'A ' + str(value['outou']) + ' ' + value['outouLabel']
+                    text = 'A ' + str(value['outou'])
                     moreConflictConversation[key].append(text)
                 else:
                     text = text = 'A ' + \
@@ -426,7 +421,7 @@ def comparison(a, b, c):
                 lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], b))
             for value in content:
                 if value['outouLabel'] == 'あいづち':
-                    text = 'B ' + str(value['outou']) + ' ' + value['outouLabel']
+                    text = 'B ' + str(value['outou'])
                     moreConflictConversation[key].append(text)
                 else:
                     text = text = 'B ' + \
@@ -437,20 +432,24 @@ def comparison(a, b, c):
                 lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], c))
             for value in content:
                 if value['outouLabel'] == 'あいづち':
-                    text = 'C ' + str(value['outou']) + ' ' + value['outouLabel']
+                    text = 'C ' + str(value['outou'])
                     moreConflictConversation[key].append(text)
                 else:
                     text = text = 'C ' + \
                         str(value['outou']) + ' ' + value['outouLabel']
                     moreConversation[key].append(text)
 
-    print(moreConversation)
-    print(len(moreConversation), len(moreResponse))
+        if len(moreConversation[key]) == 0:
+            moreConversation.pop(key)
+        if len(moreConflictConversation[key]) == 0:
+            moreConflictConversation.pop(key)
 
     # 一人しか応答していない文節応答を抜き出す
-    aloneConversation = []
-    aloneConflictConversation = []
+    aloneConversation = {}
+    aloneConflictConversation = {}
     for key in aloneContent:
+        aloneConversation[key] = []
+        aloneConflictConversation[key] = []
         if key in valueA:
             content = list(filter(
                 lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
@@ -458,54 +457,68 @@ def comparison(a, b, c):
                 # a.remove(value) # 二人以上の応答に更新
                 if value['outouLabel'] == 'あいづち':
                     text = 'A ' + value['content'] + ' ' + str(value['outou'])
-                    aloneConflictConversation.append(text)
+                    aloneConflictConversation[key].append(text)
                 else:
                     text = 'A ' + value['content'] + ' ' + \
                         str(value['outou']) + ' ' + value['outouLabel']
-                    aloneConversation.append(text)
+                    aloneConversation[key].append(text)
 
-        elif key in valueB:
+        if key in valueB:
             content = list(filter(
                 lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], b))
             for value in content:
                 # b.remove(value)
                 if value['outouLabel'] == 'あいづち':
                     text = 'B ' + value['content'] + ' ' + str(value['outou'])
-                    aloneConflictConversation.append(text)
+                    aloneConflictConversation[key].append(text)
                 else:
                     text = 'B ' + value['content'] + ' ' + \
                         str(value['outou']) + ' ' + value['outouLabel']
-                    aloneConversation.append(text)
+                    aloneConversation[key].append(text)
 
-        elif key in valueC:
+        if key in valueC:
             content = list(filter(
                 lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], c))
             for value in content:
                 # c.remove(value)
                 if value['outouLabel'] == 'あいづち':
                     text = 'C ' + value['content'] + ' ' + str(value['outou'])
-                    aloneConflictConversation.append(text)
+                    aloneConflictConversation[key].append(text)
                 else:
                     text = 'C ' + value['content'] + ' ' + \
                         str(value['outou']) + ' ' + value['outouLabel']
-                    aloneConversation.append(text)
+                    aloneConversation[key].append(text)
+
+        if len(aloneConversation[key]) == 0:
+            aloneConversation.pop(key)
+        if len(aloneConflictConversation[key]) == 0:
+            aloneConflictConversation.pop(key)
 
     # ファイルの初期化
     with open('aloneConflict.txt', mode='w') as f:
         f.write('')
     with open('aloneConversation.txt', mode='w') as f:
         f.write('')
+    with open('moreConflictResponse.txt', mode='w') as f:
+        f.write('')
+    with open('moreResponse.txt', mode='a') as f:
+        f.write('')
 
     # ファイルに書き込む
-    for data in aloneConflictConversation:
+    for key, data in aloneConflictConversation.items():
         with open('aloneConflict.txt', mode='a') as f:
-            f.write(data + '\n')
+            f.write(str(key) + '\n' + str(data) + '\n')
     print('fileWrite at aloneConflict.txt : ３人のうち一人だけしかしていない文節応答（あいづちのみ）')
-    for data in aloneConversation:
+    for key, data in aloneConversation.items():
         with open('aloneConversation.txt', mode='a') as f:
-            f.write(data + '\n')
+            f.write(str(key) + '\n' + str(data) + '\n')
     print('fileWrite at aloneConversation.txt : ３人のうち一人だけしかしていない文節応答（あいづち以外）')
-    print(len(aloneConversation), len(aloneConflictConversation))
+    for key, data in moreConversation.items():
+        with open('moreResponse.txt', mode='a') as f:
+            f.write(str(key) + '\n')
+        for value in data:
+            with open('moreResponse.txt', mode='a') as f:
+                f.write(str(value) + '\n')
 
 
 if __name__ == '__main__':
