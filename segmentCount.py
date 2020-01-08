@@ -6,7 +6,6 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
-fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -312,7 +311,7 @@ def writeConversationData(targetData, katariData, outouData, outouLabelData):
                 end = katari['time'][1]
                 for outou in outouData[index]:
                     outouTime = list(outou.keys())[0]
-                    outouText = list(outou.values())[0]
+                    # outouText = list(outou.values())[0]
                     if start <= outouTime and outouTime < end:
                         count += 1
                         label = list(filter(lambda x: list(x.keys())[0]
@@ -390,9 +389,16 @@ def comparison(a, b, c):
     # 一人しか応答していない文節応答
     aloneConversation = {}
     aloneConflictConversation = {}  # あいづち用
-    # 複数人が応答している文節応答
-    moreConflictConversation = {}   # あいづち用
-    moreConversation = {}
+
+    # ファイルの初期化
+    with open('aloneConflict.txt', mode='w') as f:
+        f.write('')
+    with open('aloneConversation.txt', mode='w') as f:
+        f.write('')
+    with open('moreConflictResponse.txt', mode='w') as f:
+        f.write('')
+    with open('moreResponse.txt', mode='w') as f:
+        f.write('')
 
     for key in allValue:
         flagList = [key in valueA, key in valueB, key in valueC]
@@ -442,50 +448,68 @@ def comparison(a, b, c):
                 aloneConflictConversation.pop(key)
 
         else:
-            moreConflictConversation[key] = []
-            moreConversation[key] = []
+            content = {key: []}
+
             if key in valueA:   # ABCの振り分け
-                content = list(
+                retrieve = list(
                     filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
-                for value in content:   # 値の検索と追加
-                    if value['outouLabel'] == 'あいづち':
-                        text = 'A ' + str(value['outou'])
-                        moreConflictConversation[key].append(text)
-                    else:
-                        text = 'A ' + str(value['outou']) + \
-                            ' ' + value['outouLabel']
-                        moreConversation[key].append(text)
+                for value in retrieve:
+                    text = 'A ' + str(value['outou']) + \
+                        ' ' + value['outouLabel']
+                    content[key].append(text)
 
             if key in valueB:
-                content = list(
+                retrieve = list(
                     filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], b))
-                for value in content:
-                    if value['outouLabel'] == 'あいづち':
-                        text = 'B ' + str(value['outou'])
-                        moreConflictConversation[key].append(text)
-                    else:
-                        text = 'B ' + str(value['outou']) + \
-                            ' ' + value['outouLabel']
-                        moreConversation[key].append(text)
+                for value in retrieve:
+                    text = 'B ' + str(value['outou']) + \
+                        ' ' + value['outouLabel']
+                    content[key].append(text)
 
             if key in valueC:
-                content = list(
+                retrieve = list(
                     filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], c))
-                for value in content:
-                    if value['outouLabel'] == 'あいづち':
-                        text = 'C ' + str(value['outou'])
-                        moreConflictConversation[key].append(text)
-                    else:
-                        text = 'C ' + str(value['outou']) + \
-                            ' ' + value['outouLabel']
-                        moreConversation[key].append(text)
+                for value in retrieve:
+                    text = 'C ' + str(value['outou']) + \
+                        ' ' + value['outouLabel']
+                    content[key].append(text)
 
-            # 値がない場合pop
-            if len(moreConflictConversation[key]) == 0:
-                moreConflictConversation.pop(key)
-            if len(moreConversation[key]) == 0:
-                moreConversation.pop(key)
-    pprint.pprint(moreConflictConversation)
+            # あいづちが一人でもいればあいづちとみなす
+            contentValue = list(content.values())[0]
+            for value in contentValue:
+                if 'あいづち' in value:
+                    flag = False
+                else:
+                    flag = True
+                    break
+
+            if flag:
+                for key, data in content.items():
+                    with open('moreResponse.txt', mode='a') as f:
+                        f.write(str(key) + '\n')
+                    for value in data:
+                        with open('moreResponse.txt', mode='a') as f:
+                            f.write(str(value) + '\n')
+            else:
+                for key, data in content.items():
+                    with open('moreConflictResponse.txt', mode='a') as f:
+                        f.write(str(key) + '\n')
+                    for value in data:
+                        with open('moreConflictResponse.txt', mode='a') as f:
+                            f.write(str(value) + '\n')
+                            
+    # ファイルに書き込む
+    for key, data in aloneConflictConversation.items():
+        with open('aloneConflict.txt', mode='a') as f:
+            f.write(str(key) + '\n' + data[0] + '\n')
+    print('fileWrite at aloneConflict.txt : ３人のうち一人だけしかしていない文節応答（あいづちのみ）')
+    for key, data in aloneConversation.items():
+        with open('aloneConversation.txt', mode='a') as f:
+            f.write(str(key) + '\n' + data[0] + '\n')
+    print('fileWrite at aloneConversation.txt : ３人のうち一人だけしかしていない文節応答（あいづち以外）')
+    print('fileWrite at moreConflictResponse.txt : ３人のうち複数人がしている文節応答（あいづちのみ）')
+    print('fileWrite at moreResponse.txt : ３人のがしている文節応答（あいづち以外）')
+
 
 if __name__ == '__main__':
     kt = Segment()
