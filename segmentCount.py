@@ -1,6 +1,7 @@
 import glob
 import copy
 import pprint
+import MeCab
 from functools import reduce
 
 fileArray = [
@@ -389,6 +390,9 @@ def comparison(a, b, c):
     # 一人しか応答していない文節応答
     aloneConversation = {}
     aloneConflictConversation = {}  # あいづち用
+    # 複数人が一致した文節応答
+    moreResponse = {}
+    moreConflictResponse = {}   # あいづち用
 
     # ファイルの初期化
     with open('aloneConflict.txt', mode='w') as f:
@@ -398,6 +402,8 @@ def comparison(a, b, c):
     with open('moreConflictResponse.txt', mode='w') as f:
         f.write('')
     with open('moreResponse.txt', mode='w') as f:
+        f.write('')
+    with open('countArchetypes.txt', mode='w') as f:
         f.write('')
 
     for key in allValue:
@@ -449,7 +455,8 @@ def comparison(a, b, c):
 
         else:
             content = {key: []}
-
+            moreConflictResponse[key] = []
+            moreResponse[key] = []
             if key in valueA:   # ABCの振り分け
                 retrieve = list(
                     filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
@@ -474,7 +481,7 @@ def comparison(a, b, c):
                         ' ' + value['outouLabel']
                     content[key].append(text)
 
-            # あいづちが一人でもいればあいづちとみなす
+            # あいづち以外が一人でもいればそれに合わせる
             contentValue = list(content.values())[0]
             for value in contentValue:
                 if 'あいづち' in value:
@@ -488,6 +495,7 @@ def comparison(a, b, c):
                     with open('moreResponse.txt', mode='a') as f:
                         f.write(str(key) + '\n')
                     for value in data:
+                        moreResponse[key].append(value)
                         with open('moreResponse.txt', mode='a') as f:
                             f.write(str(value) + '\n')
             else:
@@ -495,9 +503,19 @@ def comparison(a, b, c):
                     with open('moreConflictResponse.txt', mode='a') as f:
                         f.write(str(key) + '\n')
                     for value in data:
+                        moreConflictResponse[key].append(value)
                         with open('moreConflictResponse.txt', mode='a') as f:
                             f.write(str(value) + '\n')
-                            
+
+            if len(moreConflictResponse[key]) == 0:
+                moreConflictResponse.pop(key)
+            if len(moreResponse[key]) == 0:
+                moreResponse.pop(key)
+
+    # 文節応答のラベルをkeyとして文節の原型の数を数える
+    countArchetypes(moreResponse)
+    # pprint.pprint(moreConflictResponse)
+
     # ファイルに書き込む
     for key, data in aloneConflictConversation.items():
         with open('aloneConflict.txt', mode='a') as f:
@@ -509,6 +527,61 @@ def comparison(a, b, c):
     print('fileWrite at aloneConversation.txt : ３人のうち一人だけしかしていない文節応答（あいづち以外）')
     print('fileWrite at moreConflictResponse.txt : ３人のうち複数人がしている文節応答（あいづちのみ）')
     print('fileWrite at moreResponse.txt : ３人のがしている文節応答（あいづち以外）')
+
+
+def countArchetypes(data):
+    mecab = MeCab.Tagger('-Ochasen')
+    mecab.parse('')
+
+    # 変数の初期化
+    allPrototype = {}
+    keyPrototype = {}
+    for value in data.values():
+        for valueData in value:
+            label = valueData.split(' ')[-1]
+            allPrototype[label] = []
+            keyPrototype[label] = []
+
+    for key, value in data.items():
+        node = mecab.parseToNode(key[1])
+        word_class = []  # 原型を格納
+        while node:
+            wclass = node.feature.split(',')
+            if wclass[0] != u'BOS/EOS':
+                if wclass != None:
+                    word_class.append(wclass[6])
+            node = node.next
+        # データを追加
+        for valueData in value:
+            label = valueData.split(' ')[-1]
+            allPrototype[label].extend(word_class)
+            for wclass in word_class:
+                if wclass not in keyPrototype[label]:
+                    keyPrototype[label].append(wclass)
+
+    # 原型の数を数える
+    tmp = {}
+    result = {}
+    for key, value in keyPrototype.items():
+        tmp[key] = {}
+        for target in value:
+            tmp[key].update({target: allPrototype[key].count(target)})
+
+    for key, value in tmp.items():
+        result[key] = []
+        for k, v in sorted(value.items(), key=lambda x: -x[1]):
+            result[key].append({k: v})
+
+    f = open('countArchetypes.txt', mode='a')
+    for key, value in result.items():
+        f.write(key + '\n')
+        for i, valueData in enumerate(value):
+            f.write(str(valueData) + ', ')
+            if i % 5 == 3:
+                f.write('\n')
+        f.write('\n')
+    f.close()
+    print('fileWrite at countArchetypes.txt : 文節を原型に分割しラベルごとに数をカウント')
 
 
 if __name__ == '__main__':
