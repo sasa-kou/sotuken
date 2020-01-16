@@ -273,8 +273,8 @@ def statistics_group(katari_data, outou_data):   # 品詞を含む
                 outou_info[index].remove(data)
 
     print('文節応答の数:', count)
-    #pprint.pprint(data_detail)
-    #for i in list(data_detail):
+    # pprint.pprint(data_detail)
+    # for i in list(data_detail):
     #    print(i, len(data_detail[i]))
     return data_detail
 

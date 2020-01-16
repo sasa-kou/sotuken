@@ -99,8 +99,8 @@ class Outou:
         return count
 
     def label(self):
-        #pprint.pprint(self.outou_compare)
-        #for i in list(self.outou_compare):
+        # pprint.pprint(self.outou_compare)
+        # for i in list(self.outou_compare):
         #    print(i, len(self.outou_compare[i]))
         result = {}
         ans = []
