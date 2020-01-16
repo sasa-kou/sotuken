@@ -3,6 +3,7 @@ import sys
 import os
 import shutil
 from functools import reduce
+import pprint
 path = 'toukeiResult.txt'
 with open(path, mode='w') as f:
     f.write('')
@@ -93,11 +94,14 @@ class Outou:
         for index in list(self.outou_compare.keys()):
             # print(index)
             # print(len(self.outou_a_compare[index]))
-            count = count + len(self.outou_compare[index])
+            count += len(self.outou_compare[index])
 
         return count
 
     def label(self):
+        #pprint.pprint(self.outou_compare)
+        #for i in list(self.outou_compare):
+        #    print(i, len(self.outou_compare[i]))
         result = {}
         ans = []
         parce = []

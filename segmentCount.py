@@ -8,7 +8,6 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
-fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -32,7 +31,6 @@ class Outou:
                 targetFileList.sort()
                 for targetFile in targetFileList:
                     self.readOutou(targetFile)
-
                 num = file_index + '-' + index
                 self.outou_compare.update({num: self.outou})
                 self.outou_label_compare.update({num: self.outou_label})
@@ -184,7 +182,7 @@ class Segment:
         file.close()
 
 
-def statistics_group(katari_data, outou_info):   # 品詞を含む
+def statistics_group(katari_data, outou_data):   # 品詞を含む
     katari_value = copy.deepcopy(katari_data)
     katari_info = {}
     for index in list(katari_value):    # 文節のみを抽出
@@ -202,6 +200,7 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
                 katari_info[index][-1]['hinshi'].append(hinshi)
                 katari_info[index][-1]['detail'].append(detail)
 
+    outou_info = copy.deepcopy(outou_data)
     count = 0
     data_detail = {}
     for index in list(katari_info):
@@ -210,31 +209,73 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
             katari_time = katari['time']
             start = katari_time[0]
             end = katari_time[1]
-            # 応答があった一つ前の文節が対象
-            popIndex = katari_info[index].index(katari) - 1
-            # 話と話の間の謎の間
+            fend = katari_time[1]
+            # 話と話の間の謎の間の調整
             featureIndex = katari_info[index].index(katari) + 1
-            if len(katari_info[index]) == featureIndex:
+            if len(katari_info[index]) == featureIndex:  # ファイルを跨ぐ間
                 nextIndex = list(katari_info).index(index) + 1
                 if len(list(katari_info)) != nextIndex:
+                    """
                     key = list(katari_info)[nextIndex]
-                    end = katari_info[key][0]['time'][0]
+                    if katari_info[key][0]['time'][0] < fend:    # 話の流れがおかしい
+                        #end += 1000.0
+                        fend = end + 1000.0
+                    else:
+                        # end = katari_info[key][0]['time'][0]
+                        fend = katari_info[key][0]['time'][0]
+                    """
+                    fend = end + 1000.0
+                    mysteryFlag = True
+                else:
+                    #end += 1000.0
+                    fend = end + 1000.0
             elif katari_time[1] != katari_info[index][featureIndex]['time'][0]:  # 謎の間
-                end = katari_info[index][featureIndex]['time'][0]
+                #end = katari_info[index][featureIndex]['time'][0]
+                fend = katari_info[index][featureIndex]['time'][0]
+                mysteryFlag = True
+            else:
+                mysteryFlag = False
+            # 応答があった一つ前の文節が対象
+            if mysteryFlag:
+                popIndex = katari_info[index].index(katari)
+            else:
+                popIndex = katari_info[index].index(katari) - 1
+
             # 応答文字列の取得
+            removeList = []
             for outou in outou_info[index]:
                 outou_start = list(outou.keys())[0]
-                if start <= outou_start < end:
-                    # num = katari_info[index].index(katari)
-                    # num2 = outou_info[index].index(outou)
-                    # print(katari_info[index][popIndex], outou_info[index][num2])
-                    label = katari_info[index][popIndex]['hinshi']
-                    value = {'group': label}
-                    value.update({'outou': outou})
-                    data_detail[index].append(value)
-                    count += 1
+                if end == fend:
+                    if start <= outou_start < end:
+                        # num = katari_info[index].index(katari)
+                        # num2 = outou_info[index].index(outou)
+                        # print(katari_info[index][popIndex], outou_info[index][num2])
+                        label = katari_info[index][popIndex]['hinshi']
+                        value = {'group': label}
+                        value.update({'outou': outou})
+                        data_detail[index].append(value)
+                        count += 1
+                        removeList.append(outou)
+                else:
+                    if start <= outou_start < fend:
+                        if end < outou_start < fend:
+                            popIndex = katari_info[index].index(katari)
+                        else:
+                            popIndex = katari_info[index].index(katari) - 1
+                        label = katari_info[index][popIndex]['hinshi']
+                        value = {'group': label}
+                        value.update({'outou': outou})
+                        data_detail[index].append(value)
+                        count += 1
+                        removeList.append(outou)
+            # 一度出た応答は削除
+            for data in removeList:
+                outou_info[index].remove(data)
 
     print('文節応答の数:', count)
+    #pprint.pprint(data_detail)
+    #for i in list(data_detail):
+    #    print(i, len(data_detail[i]))
     return data_detail
 
 
