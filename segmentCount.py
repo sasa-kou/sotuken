@@ -2,11 +2,13 @@ import glob
 import copy
 import pprint
 import MeCab
+from natsort import natsorted
 from functools import reduce
 
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
+fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -104,10 +106,9 @@ class Segment:
             files = glob.glob(file_root + file_index + '/')
             for index in testData_num:
                 bigFiles = glob.glob(files[0] + index + '/*')
-                for bigFile in bigFiles:
+                for bigFile in natsorted(bigFiles):
                     targetFileList = glob.glob(bigFile + file_end)
-                    targetFileList.sort()
-                    for targetFile in targetFileList:
+                    for targetFile in natsorted(targetFileList):
                         self.readKatari(targetFile)
                 num = file_index + '-' + index
                 self.katari_compare.update({num: self.katari})
@@ -139,13 +140,12 @@ class Segment:
                 begin = float(data[1:3][0])
                 end = float(data[1:3][1])
 
-                if len(self.katari) != 0:
+                if len(self.katari) != 0:   # 間を格納
                     last_word = self.katari[-1]['word']
                     last_time = self.katari[-1]['time']
                     if 'pause' in last_word:
                         self.katari.pop(-1)
                         begin = last_time[0]
-
                 time = [begin, end]
             else:
                 word = data[0]
@@ -165,7 +165,7 @@ class Segment:
                     flag = time[1]
                     self.katari.append({'word': word, 'time': time})
                 else:
-                    if flag != time[0]:  # そのまま更新
+                    if flag != time[0]:  # 一つ前のデータの終わりの時間を更新
                         self.katari.append(
                             {'word': word, 'time': time, 'hinshi': [hinshi], 'detail': [detail], 'flag': self.flag})
                     else:   # 時間を編集して更新
@@ -176,8 +176,11 @@ class Segment:
                     self.flag = False
             else:
                 if 'pause' not in hinshi:
-                    self.katari.append({'word': word, 'time': newTime,
+                    self.katari.append({'word': word, 'time': time,
                                         'hinshi': [hinshi], 'detail': [detail], 'flag': self.flag})
+                else:
+                    tmp = [self.katari[-1]['time'][0], time[1]]  # silEに対応
+                    self.katari[-1]['time'] = tmp
         file.close()
 
 
@@ -193,6 +196,9 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
             else:
                 hinshi = data['hinshi'][0]
                 detail = data['detail'][0]
+                endTime = data['time'][1]
+                katari_info[index][-1]['time'].pop()
+                katari_info[index][-1]['time'].append(endTime)
                 katari_info[index][-1]['hinshi'].append(hinshi)
                 katari_info[index][-1]['detail'].append(detail)
 
@@ -204,14 +210,23 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
             katari_time = katari['time']
             start = katari_time[0]
             end = katari_time[1]
+            # 応答があった一つ前の文節が対象
             popIndex = katari_info[index].index(katari) - 1
+            # 話と話の間の謎の間
+            featureIndex = katari_info[index].index(katari) + 1
+            if len(katari_info[index]) == featureIndex:
+                nextIndex = list(katari_info).index(index) + 1
+                if len(list(katari_info)) != nextIndex:
+                    key = list(katari_info)[nextIndex]
+                    end = katari_info[key][0]['time'][0]
+            elif katari_time[1] != katari_info[index][featureIndex]['time'][0]:  # 謎の間
+                end = katari_info[index][featureIndex]['time'][0]
             # 応答文字列の取得
             for outou in outou_info[index]:
-                outou_time = list(outou.keys())[0]
-                if start <= outou_time and outou_time < end:
+                outou_start = list(outou.keys())[0]
+                if start <= outou_start < end:
                     # num = katari_info[index].index(katari)
                     # num2 = outou_info[index].index(outou)
-                    # 応答があった一つ前の文節が対象
                     # print(katari_info[index][popIndex], outou_info[index][num2])
                     label = katari_info[index][popIndex]['hinshi']
                     value = {'group': label}
@@ -219,7 +234,7 @@ def statistics_group(katari_data, outou_info):   # 品詞を含む
                     data_detail[index].append(value)
                     count += 1
 
-    # print('CH', count)
+    print('文節応答の数:', count)
     return data_detail
 
 
@@ -373,6 +388,8 @@ def segmentContent(conversationData, path):
             f.write('\n')
     print('fileWrite at ' + writePath)
 
+# 一致などの比較
+
 
 def comparison(a, b, c):
     valueA = []  # [{文節の開始時間:文節の内容}]
@@ -513,8 +530,9 @@ def comparison(a, b, c):
                 moreResponse.pop(key)
 
     # 文節応答のラベルをkeyとして文節の原型の数を数える
-    countArchetypes(moreResponse)
-    # pprint.pprint(moreConflictResponse)
+    countArchetypes(aloneConversation, moreResponse)
+    print('alone', len(aloneConversation))
+    print('more', len(moreResponse))
 
     # ファイルに書き込む
     for key, data in aloneConflictConversation.items():
@@ -529,7 +547,10 @@ def comparison(a, b, c):
     print('fileWrite at moreResponse.txt : ３人のがしている文節応答（あいづち以外）')
 
 
-def countArchetypes(data):
+def countArchetypes(data1, data2):
+    data = copy.deepcopy(data1)
+    data.update(data2)
+    print('marge', len(data))
     mecab = MeCab.Tagger('-Ochasen')
     mecab.parse('')
 
@@ -542,13 +563,15 @@ def countArchetypes(data):
             allPrototype[label] = []
             keyPrototype[label] = []
 
+    select_conditions = ['名詞', '動詞', '形容詞', '副詞']  # 取り出したい品詞
     for key, value in data.items():
         node = mecab.parseToNode(key[1])
         word_class = []  # 原型を格納
         while node:
             wclass = node.feature.split(',')
             if wclass[0] != u'BOS/EOS':
-                if wclass != None:
+                pos = wclass[0]
+                if wclass != None and pos in select_conditions:
                     word_class.append(wclass[6])
             node = node.next
         # データを追加
@@ -581,7 +604,15 @@ def countArchetypes(data):
                 f.write('\n')
         f.write('\n')
     f.close()
-    print('fileWrite at countArchetypes.txt : 文節を原型に分割しラベルごとに数をカウント')
+    print('fileWrite at countArchetypes.txt : 文節を原型に分割しラベルごとに数をカウント（名詞、動詞、形容詞、副詞のみ）')
+
+    # デバック用　数を数える
+    for key, value in result.items():
+        print(key, end=': ')
+        summ = 0
+        for valueData in value:
+            summ += list(valueData.values())[0]
+        print(summ)
 
 
 if __name__ == '__main__':
@@ -595,7 +626,7 @@ if __name__ == '__main__':
     ot = Outou('c')
     outou_c, outou_label_c = ot.read_data()
 
-    group_data = statistics_group(katari, outou_a)
+    group_data = statistics_group(katari, outou_a)  # 文節の品詞の組み合わせと応答データ
     labelGroupConversion(group_data, outou_label_a, 'A')
     print('fileWrite at segmentSizeA.txt : 文節の組み合わせと応答の関係')
     conversationDataA = writeConversationData(
