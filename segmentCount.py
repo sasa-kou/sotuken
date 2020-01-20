@@ -8,6 +8,7 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
+fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -251,8 +252,10 @@ def statistics_group(katari_data, outou_data):   # 品詞を含む
                         # num2 = outou_info[index].index(outou)
                         # print(katari_info[index][popIndex], outou_info[index][num2])
                         label = katari_info[index][popIndex]['hinshi']
+                        time = katari_info[index][popIndex]['time']
                         value = {'group': label}
                         value.update({'outou': outou})
+                        value.update({'time': time})
                         data_detail[index].append(value)
                         count += 1
                         removeList.append(outou)
@@ -263,8 +266,10 @@ def statistics_group(katari_data, outou_data):   # 品詞を含む
                         else:
                             popIndex = katari_info[index].index(katari) - 1
                         label = katari_info[index][popIndex]['hinshi']
+                        time = katari_info[index][popIndex]['time']
                         value = {'group': label}
                         value.update({'outou': outou})
+                        value.update({'time': time})
                         data_detail[index].append(value)
                         count += 1
                         removeList.append(outou)
@@ -352,42 +357,48 @@ def labelGroupConversion(targetData, outouLabelData, fileName):
     # pprint.pprint(result, width=80, compact=True)
 
 
-def writeConversationData(targetData, katariData, outouData, outouLabelData):
+def writeConversationData(targetData, katariData, outouLabelData):
     count = 0
     result = []
-    for index in list(katariData):
-        content = ''
-        segmentlabelList = []
-        for katari in katariData[index]:
-            flag = katari['flag']
-            word = katari['word']
-            hinshi = katari['hinshi'][0]
-            # 文節ごとの語り文字列と対応する応答文字列の取得
-            if flag:
+    for index in list(targetData):
+        for data in targetData[index]:
+            content = ''
+            segmentlabelList = data['group']
+            segmentTime = data['time']
+            outou = data['outou']
+            outoutTime = list(outou.keys())[0]
+            label = list(filter(lambda x: list(x.keys())[0] == outoutTime ,outouLabelData[index]))[0]
+            outouLabel = list(label.values())[0]
+            for katari in katariData[index]:
                 start = katari['time'][0]
                 end = katari['time'][1]
-                for outou in outouData[index]:
-                    outouTime = list(outou.keys())[0]
-                    # outouText = list(outou.values())[0]
-                    if start <= outouTime and outouTime < end:
+                word = katari['word']
+                if start == segmentTime[0]:
+                    content = word
+                    # 1単語だけの文節に対応
+                    if end == segmentTime[1]:
                         count += 1
-                        label = list(filter(lambda x: list(x.keys())[0]
-                                            == outouTime, outouLabelData[index]))[0]
-                        outouLabel = list(label.values())[0]
-                        data = {'content': content}
-                        data.update({'clauseTime': [start, end]})
-                        data.update({'group': segmentlabelList})
-                        data.update({'outou': outou})
-                        data.update({'outouLabel': outouLabel})
-                        # print(data)
-                        result.append(data)
-                content = word
-                segmentlabelList = [hinshi]
-            else:
-                content += word  # 文節の語り文字列の更新
-                segmentlabelList.append(hinshi)
+                        value = {'content': content}
+                        value.update({'clauseTime': segmentTime})
+                        value.update({'group': segmentlabelList})
+                        value.update({'outou': outou})
+                        value.update({'outouLabel': outouLabel})
+                        result.append(value)
+                elif end == segmentTime[1]:
+                    # 書き込み処理
+                    content += word
+                    count += 1
+                    value = {'content': content}
+                    value.update({'clauseTime': segmentTime})
+                    value.update({'group': segmentlabelList})
+                    value.update({'outou': outou})
+                    value.update({'outouLabel': outouLabel})
+                    result.append(value)
+                else:
+                    content += word
 
-    # print('CH', count)
+    print('CH: writeConversationData', count)
+    #pprint.pprint(result)
     return result
 
 
@@ -671,21 +682,22 @@ if __name__ == '__main__':
     labelGroupConversion(group_data, outou_label_a, 'A')
     print('fileWrite at segmentSizeA.txt : 文節の組み合わせと応答の関係')
     conversationDataA = writeConversationData(
-        group_data, katari, outou_a, outou_label_a)
+        group_data, katari, outou_label_a)
     # segmentContent(conversationDataA, 'A')
 
     group_data = statistics_group(katari, outou_b)
     labelGroupConversion(group_data, outou_label_b, 'B')
     print('fileWrite at segmentSizeB.txt : 文節の組み合わせと応答の関係')
     conversationDataB = writeConversationData(
-        group_data, katari, outou_b, outou_label_b)
+        group_data, katari, outou_label_b)
     # segmentContent(conversationDataB, 'B')
 
     group_data = statistics_group(katari, outou_c)
     labelGroupConversion(group_data, outou_label_c, 'C')
     print('fileWrite at segmentSizeC.txt : 文節の組み合わせと応答の関係')
     conversationDataC = writeConversationData(
-        group_data, katari, outou_c, outou_label_c)
+        group_data, katari, outou_label_c)
     # segmentContent(conversationDataC, 'C')
 
     comparison(conversationDataA, conversationDataB, conversationDataC)
+
