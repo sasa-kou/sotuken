@@ -8,7 +8,6 @@ from functools import reduce
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
 ]
-fileArray = ['01']
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
 
@@ -367,7 +366,8 @@ def writeConversationData(targetData, katariData, outouLabelData):
             segmentTime = data['time']
             outou = data['outou']
             outoutTime = list(outou.keys())[0]
-            label = list(filter(lambda x: list(x.keys())[0] == outoutTime ,outouLabelData[index]))[0]
+            label = list(filter(lambda x: list(x.keys())[
+                         0] == outoutTime, outouLabelData[index]))[0]
             outouLabel = list(label.values())[0]
             for katari in katariData[index]:
                 start = katari['time'][0]
@@ -398,7 +398,7 @@ def writeConversationData(targetData, katariData, outouLabelData):
                     content += word
 
     print('CH: writeConversationData', count)
-    #pprint.pprint(result)
+    # pprint.pprint(result)
     return result
 
 
@@ -440,22 +440,24 @@ def segmentContent(conversationData, path):
             f.write('\n')
     print('fileWrite at ' + writePath)
 
-# 一致などの比較
 
-
-def comparison(a, b, c):
-    valueA = []  # [{文節の開始時間:文節の内容}]
+def comparison(a, b, c):    # 一致などの比較
+    valueA = []
     valueB = []
     valueC = []
     for data in a:
-        valueA.append((data['clauseTime'][0], data['content']))
+        valueA.append(
+            (data['clauseTime'][0], data['clauseTime'][1], data['content']))
     for data in b:
-        valueB.append((data['clauseTime'][0], data['content']))
+        valueB.append(
+            (data['clauseTime'][0], data['clauseTime'][1], data['content']))
     for data in c:
-        valueC.append((data['clauseTime'][0], data['content']))
+        valueC.append(
+            (data['clauseTime'][0], data['clauseTime'][1], data['content']))
 
-    tmp = valueA + valueB + valueC  # 結合
+    tmp = valueA + valueB + valueC  # 出現文節応答リストの作成
     allValue = list(set(tmp))   # 重複値を削除
+    print('CH', len(tmp))
     # 一人しか応答していない文節応答
     aloneConversation = {}
     aloneConflictConversation = {}  # あいづち用
@@ -482,7 +484,7 @@ def comparison(a, b, c):
             aloneConflictConversation[key] = []
             if flagList.index(True) == 0:   # ABCの振り分け
                 content = list(
-                    filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
+                    filter(lambda x: x['clauseTime'][0] == key[0] and x['clauseTime'][1] == key[1], a))
                 for value in content:   # 値の検索と追加
                     if value['outouLabel'] == 'あいづち':
                         text = 'A ' + str(value['outou'])
@@ -492,9 +494,9 @@ def comparison(a, b, c):
                             ' ' + value['outouLabel']
                         aloneConversation[key].append(text)
 
-            if flagList.index(True) == 1:
+            elif flagList.index(True) == 1:
                 content = list(
-                    filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], b))
+                    filter(lambda x: x['clauseTime'][0] == key[0] and x['clauseTime'][1] == key[1], b))
                 for value in content:
                     if value['outouLabel'] == 'あいづち':
                         text = 'B ' + str(value['outou'])
@@ -504,9 +506,9 @@ def comparison(a, b, c):
                             ' ' + value['outouLabel']
                         aloneConversation[key].append(text)
 
-            if flagList.index(True) == 2:
+            elif flagList.index(True) == 2:
                 content = list(
-                    filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], c))
+                    filter(lambda x: x['clauseTime'][0] == key[0] and x['clauseTime'][1] == key[1], c))
                 for value in content:
                     if value['outouLabel'] == 'あいづち':
                         text = 'C ' + str(value['outou'])
@@ -522,13 +524,13 @@ def comparison(a, b, c):
             if len(aloneConflictConversation[key]) == 0:
                 aloneConflictConversation.pop(key)
 
-        else:
+        else:   # 複数人がした応答
             content = {key: []}
             moreConflictResponse[key] = []
             moreResponse[key] = []
             if key in valueA:   # ABCの振り分け
                 retrieve = list(
-                    filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], a))
+                    filter(lambda x: x['clauseTime'][0] == key[0] and x['clauseTime'][1] == key[1], a))
                 for value in retrieve:
                     text = 'A ' + str(value['outou']) + \
                         ' ' + value['outouLabel']
@@ -536,7 +538,7 @@ def comparison(a, b, c):
 
             if key in valueB:
                 retrieve = list(
-                    filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], b))
+                    filter(lambda x: x['clauseTime'][0] == key[0] and x['clauseTime'][1] == key[1], b))
                 for value in retrieve:
                     text = 'B ' + str(value['outou']) + \
                         ' ' + value['outouLabel']
@@ -544,20 +546,19 @@ def comparison(a, b, c):
 
             if key in valueC:
                 retrieve = list(
-                    filter(lambda x: x['clauseTime'][0] == key[0] and x['content'] == key[1], c))
+                    filter(lambda x: x['clauseTime'][0] == key[0] and x['clauseTime'][1] == key[1], c))
                 for value in retrieve:
                     text = 'C ' + str(value['outou']) + \
                         ' ' + value['outouLabel']
                     content[key].append(text)
 
             # あいづち以外が一人でもいればそれに合わせる
-            contentValue = list(content.values())[0]
-            for value in contentValue:
-                if 'あいづち' in value:
-                    flag = False
-                else:
-                    flag = True
-                    break
+            valueList = list(content.values())[0]
+            companionValue = [i for i in valueList if 'あいづち' in i]  # 相槌のみ配列
+            if len(companionValue) == len(valueList):
+                flag = False
+            else:
+                flag = True
 
             if flag:
                 for key, data in content.items():
@@ -583,8 +584,17 @@ def comparison(a, b, c):
 
     # 文節応答のラベルをkeyとして文節の原型の数を数える
     countArchetypes(aloneConversation, moreResponse)
-    print('alone', len(aloneConversation))
-    print('more', len(moreResponse))
+
+    count = 0
+    for i in aloneConversation:
+        count += len(aloneConversation[i])
+    for i in aloneConflictConversation:
+        count += len(aloneConflictConversation[i])
+    for i in moreConflictResponse:
+        count += len(moreConflictResponse[i])
+    for i in moreResponse:
+        count += len(moreResponse[i])
+    print('CH', count)
 
     # ファイルに書き込む
     for key, data in aloneConflictConversation.items():
@@ -602,7 +612,6 @@ def comparison(a, b, c):
 def countArchetypes(data1, data2):
     data = copy.deepcopy(data1)
     data.update(data2)
-    print('marge', len(data))
     mecab = MeCab.Tagger('-Ochasen')
     mecab.parse('')
 
@@ -617,7 +626,7 @@ def countArchetypes(data1, data2):
 
     select_conditions = ['名詞', '動詞', '形容詞', '副詞']  # 取り出したい品詞
     for key, value in data.items():
-        node = mecab.parseToNode(key[1])
+        node = mecab.parseToNode(key[2])
         word_class = []  # 原型を格納
         while node:
             wclass = node.feature.split(',')
@@ -700,4 +709,3 @@ if __name__ == '__main__':
     # segmentContent(conversationDataC, 'C')
 
     comparison(conversationDataA, conversationDataB, conversationDataC)
-
