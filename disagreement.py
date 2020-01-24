@@ -7,6 +7,9 @@ import copy
 path = 'disagreementResult.txt'
 with open(path, mode='w') as f:
     f.write('')
+path2 = 'disagreementMatch.txt'
+with open(path2, mode='w') as f:
+    f.write('')
 
 fileArray = [
     '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
@@ -190,7 +193,7 @@ def statistics(katari_info, outou_info):
                         katari_info[index].pop(num)
                     break
 
-    return result, katari_info
+    return result, katari_info  # 応答された語り, 応答されていない語り
 
 
 def readData(target):
@@ -230,14 +233,14 @@ def count(data, targetData):
         num = flag.index(True)
         allData = int(targetData[num].split(':')[1])
         parcentage = round(wordList.count(word)/allData*100, 2)
-        result.update({word: parcentage})
+        result.update({word + ' ' + str(wordList.count(word)) + '/' + str(allData): parcentage})
 
     for k, v in sorted(result.items(), key=lambda x: -x[1]):
         answer.append({k: v})
-        # with open(path, mode='a') as f:
-        #f.write(str(k) + ':' + str(v) + '\n')
-    # with open(path, mode='a') as f:
-        # f.write('\n')
+        with open(path, mode='a') as f:
+            f.write(str(k) + ':' + str(v) + '\n')
+    with open(path, mode='a') as f:
+        f.write('\n')
 
     print(answer[0:10])
 
@@ -270,11 +273,14 @@ def match(targetData, *args):
         num = flag.index(True)
         allData = int(targetData[num].split(':')[1])
         parcentage = round(wordList.count(word)/allData*100, 2)
-        tmp.update({word: parcentage})
+        tmp.update({word + ' ' + str(wordList.count(word)) + '/' + str(allData): parcentage})
 
     for k, v in sorted(tmp.items(), key=lambda x: -x[1]):
         answer.append({k: v})
-
+        with open(path2, mode='a') as f:
+            f.write(str(k) + ':' + str(v) + '\n')
+    with open(path2, mode='a') as f:
+        f.write('\n')
     print(answer[0:10])
 
 

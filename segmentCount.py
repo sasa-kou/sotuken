@@ -181,6 +181,46 @@ class Segment:
                     self.katari[-1]['time'] = tmp
         file.close()
 
+    def writeData(self):
+        katari_value = copy.deepcopy(self.katari_compare)
+        katari_info = {}
+        for index in list(katari_value):
+            katari_info[index] = []
+            for data in katari_value[index]:
+                flag = data['flag']
+                if flag:
+                    katari_info[index].append(data)
+                else:
+                    hinshi = data['hinshi'][0]
+                    detail = data['detail'][0]
+                    endTime = data['time'][1]
+                    katari_info[index][-1]['time'].pop()
+                    katari_info[index][-1]['time'].append(endTime)
+                    katari_info[index][-1]['hinshi'].append(hinshi)
+                    katari_info[index][-1]['detail'].append(detail)
+        
+        phrasesList = []  # 出現する単語を全て保存
+        keyWord = []  # 単語の種類を保存
+        path = 'countPhrases.txt'
+        with open(path, mode='w') as f:
+            f.write('')
+
+        for index in list(katari_info):
+            for data in katari_info[index]:
+                hinshi = data['hinshi']
+                phrasesList.append(hinshi)
+                if hinshi not in keyWord:
+                    keyWord.append(hinshi)
+
+        count = 0
+        for word in keyWord:
+            with open(path, mode='a') as f:
+                f.write(str(word) + ':' + str(phrasesList.count(word)) + '\n')
+            count += phrasesList.count(word)    
+        print('文節の数',count)
+
+        return phrasesList
+
 
 def statistics_group(katari_data, outou_data):   # 品詞を含む
     katari_value = copy.deepcopy(katari_data)
@@ -283,7 +323,7 @@ def statistics_group(katari_data, outou_data):   # 品詞を含む
     return data_detail
 
 
-def labelGroupConversion(targetData, outouLabelData, fileName):
+def labelGroupConversion(targetData, outouLabelData, fileName, phrasesList):
     labelList = []
     allLabelList = []
     for index in list(targetData):  # ラベルリストの生成
@@ -337,19 +377,32 @@ def labelGroupConversion(targetData, outouLabelData, fileName):
     with open(filePath, mode='w') as f:
         f.write('')
 
+    phrases = []
     for data in value:
         for k, v in data.items():
             if k == 'group':
+                phrases = v
                 with open(filePath, mode='a') as f:
-                    f.write('文節の組み合わせ| ' + ','.join(v) + '\n')
+                    f.write('文節の組み合わせ　| ' + ','.join(v) + '\n')
             elif k == 'labelCount':
                 with open(filePath, mode='a') as f:
+                    length = 0
+                    tmp = []
+                    seen = []
+                    for i in list(targetData):
+                        for x in targetData[i]:
+                            if x['group'] == phrases:
+                                tmp.append(x['time'])
+                    countData = [x for x in tmp if x not in seen and not seen.append(x)]
+                    length = len(countData)
                     labelListData = list(map(lambda x: list(x.keys())[0], v))
-                    f.write('応答ラベルリスト| ' + ','.join(labelListData) + '\n')
-                    f.write('応答ラベルの内訳| ' + str(v) + '\n')
+                    parce = round(length/phrasesList.count(phrases)*100 ,2)
+                    f.write('その文節の応答割合| ' + str(parce) + '% ' + '(' + str(length) + '/' + str(phrasesList.count(phrases)) + ')\n')
+                    f.write('応答のラベルリスト| ' + ','.join(labelListData) + '\n')
+                    f.write('応答のラベルの内訳| ' + str(v) + '\n')
             elif k == 'parce':
                 with open(filePath, mode='a') as f:
-                    f.write('ラベルパーセント| ' + str(v) + '\n')
+                    f.write('ラベルパーセント　| ' + str(v) + '\n')
 
         with open(filePath, mode='a') as f:
             f.write('\n')
@@ -432,7 +485,7 @@ def segmentContent(conversationData, path):
                 f.write('応答のラベル: ' + str(label) + '\n')
             for data in content:
                 with open(writePath, mode='a') as f:
-                    f.write('文節: ' + str(data['content']) + '\n')
+                    f.write('文節: ' + str(data['content']) + str(data['clauseTime']) + '\n')
                     f.write('応答: ' + str(data['outou']) + '\n')
             with open(writePath, mode='a') as f:
                 f.write('\n')
@@ -679,6 +732,7 @@ def countArchetypes(data1, data2):
 if __name__ == '__main__':
     kt = Segment()
     katari = kt.read_data()
+    phrasesList = kt.writeData()
 
     ot = Outou('a')
     outou_a, outou_label_a = ot.read_data()
@@ -688,24 +742,24 @@ if __name__ == '__main__':
     outou_c, outou_label_c = ot.read_data()
 
     group_data = statistics_group(katari, outou_a)  # 文節の品詞の組み合わせと応答データ
-    labelGroupConversion(group_data, outou_label_a, 'A')
+    labelGroupConversion(group_data, outou_label_a, 'A', phrasesList)
     print('fileWrite at segmentSizeA.txt : 文節の組み合わせと応答の関係')
     conversationDataA = writeConversationData(
         group_data, katari, outou_label_a)
-    # segmentContent(conversationDataA, 'A')
+    segmentContent(conversationDataA, 'A')
 
     group_data = statistics_group(katari, outou_b)
-    labelGroupConversion(group_data, outou_label_b, 'B')
+    labelGroupConversion(group_data, outou_label_b, 'B', phrasesList)
     print('fileWrite at segmentSizeB.txt : 文節の組み合わせと応答の関係')
     conversationDataB = writeConversationData(
         group_data, katari, outou_label_b)
-    # segmentContent(conversationDataB, 'B')
+    segmentContent(conversationDataB, 'B')
 
     group_data = statistics_group(katari, outou_c)
-    labelGroupConversion(group_data, outou_label_c, 'C')
+    labelGroupConversion(group_data, outou_label_c, 'C', phrasesList)
     print('fileWrite at segmentSizeC.txt : 文節の組み合わせと応答の関係')
     conversationDataC = writeConversationData(
         group_data, katari, outou_label_c)
-    # segmentContent(conversationDataC, 'C')
+    segmentContent(conversationDataC, 'C')
 
     comparison(conversationDataA, conversationDataB, conversationDataC)
