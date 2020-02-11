@@ -13,7 +13,6 @@ fileArray = [
 ]
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
 
-
 class Outou:
     def __init__(self, file_name):
         self.outou = []
@@ -99,36 +98,60 @@ class Outou:
         return count
 
     def label(self):
-        # pprint.pprint(self.outou_compare)
-        # for i in list(self.outou_compare):
-        #    print(i, len(self.outou_compare[i]))
-        result = {}
-        ans = []
-        parce = []
         labelList = []  # 出現する単語を全て保存
         keyLabel = []  # 単語の種類を保存
         size = self.count()
 
-        # path = 'toukeiLabel' + self.file_name + '.txt'
-        # with open(path, mode='w') as f:
-        #     f.write('')
+        path = 'toukeiLabel' + self.file_name + '.txt'
+        with open(path, mode='w') as f:
+            f.write('')
 
+        value = {}
         for index in list(self.outou_label_compare.keys()):
+            value[index] = []
             for data in self.outou_label_compare[index]:
+                time = list(data.keys())[0]
                 label = list(data.values())[0]
                 labelList.append(label)
+                outou = list(filter(lambda x: time == list(
+                    x.keys())[0], self.outou_compare[index]))[0]    # ラベルに対応する応答文字列を取得
+                value[index].append({label: list(outou.values())[0]})
 
                 if label not in keyLabel:
                     keyLabel.append(label)
 
+        for label in keyLabel:
+            with open(path, mode='a') as f:
+                    f.write('ラベル：' + label + '\n')
+            content = []
+            keyList = []
+            result = {}
+            for index in list(value):
+                tmp = list(filter(lambda x: label == list(x.keys())[0], value[index]))  # 特定のラベルのみ抽出
+                for data in tmp:
+                    content.append(list(data.values())[0])  # 応答文字列配列
+
+            keyList = list(set(content))    # 重複値を削除してkey値取得
+            for key in keyList:
+                num = content.count(key)
+                result.update({key: num})
+            for k, v in sorted(result.items(), key=lambda x: -x[1]):
+                labelNum = labelList.count(label)
+                with open(path, mode='a') as f:
+                    f.write(str(k) + ': ' + str(v) + '  ' + str(round(v/labelNum*100, 2)
+                                                                    ) + '% (' + str(v) + '/ ' + str(labelNum) + ')'+'\n')
+            with open(path, mode='a') as f:
+                f.write('\n')
+
+        result = {}
+        ans = []
+        parce = []
         for label in keyLabel:
             result.update({label: labelList.count(label)})
 
         for k, v in sorted(result.items(), key=lambda x: -x[1]):
             ans.append({k: v})
             parce.append({k: round(v/size*100, 2)})
-            # with open(path, mode='a') as f:
-            #     f.write(str(k) + ':' + str(v) + '\n')
         print(ans)
         print(parce)
 
@@ -220,7 +243,7 @@ class Katari:
         for index in list(self.katari_compare.keys()):
             for data in self.katari_compare[index]:
                 num += len(data)
-        print('語りの個数', num)
+        print('形態素数', num)
 
     def write(self):
         count(self.katari_compare, 'katariCount.txt')
@@ -244,7 +267,6 @@ def count(data, filePath):
     for word in keyWord:
         with open(filePath, mode='a') as f:
             f.write(word + ':' + str(wordList.count(word)) + '\n')
-
 
 def fileWrite(katari, outou, filePath):
     time_list = []

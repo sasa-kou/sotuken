@@ -2,6 +2,7 @@ import glob
 import copy
 import pprint
 import MeCab
+import math
 from natsort import natsorted
 from functools import reduce
 
@@ -198,7 +199,7 @@ class Segment:
                     katari_info[index][-1]['time'].append(endTime)
                     katari_info[index][-1]['hinshi'].append(hinshi)
                     katari_info[index][-1]['detail'].append(detail)
-        
+
         phrasesList = []  # 出現する単語を全て保存
         keyWord = []  # 単語の種類を保存
         path = 'countPhrases.txt'
@@ -216,8 +217,8 @@ class Segment:
         for word in keyWord:
             with open(path, mode='a') as f:
                 f.write(str(word) + ':' + str(phrasesList.count(word)) + '\n')
-            count += phrasesList.count(word)    
-        print('文節の数',count)
+            count += phrasesList.count(word)
+        print('文節の数', count)
 
         return phrasesList
 
@@ -393,12 +394,18 @@ def labelGroupConversion(targetData, outouLabelData, fileName, phrasesList):
                         for x in targetData[i]:
                             if x['group'] == phrases:
                                 tmp.append(x['time'])
-                    countData = [x for x in tmp if x not in seen and not seen.append(x)]
+                    countData = [
+                        x for x in tmp if x not in seen and not seen.append(x)]
                     length = len(countData)
                     labelListData = list(map(lambda x: list(x.keys())[0], v))
-                    parce = round(length/phrasesList.count(phrases)*100 ,2)
-                    f.write('その文節の応答割合| ' + str(parce) + '% ' + '(' + str(length) + '/' + str(phrasesList.count(phrases)) + ')\n')
+                    parce = round(length/phrasesList.count(phrases)*100, 2)
+                    count = 0
+                    for num in v:
+                        count += list(num.values())[0]
+                    f.write('その文節の応答割合| ' + str(parce) + '% ' + '(' +
+                            str(length) + '/' + str(phrasesList.count(phrases)) + ')\n')
                     f.write('応答のラベルリスト| ' + ','.join(labelListData) + '\n')
+                    f.write('　　応答の数　　　| ' + str(count) + '\n')
                     f.write('応答のラベルの内訳| ' + str(v) + '\n')
             elif k == 'parce':
                 with open(filePath, mode='a') as f:
@@ -468,9 +475,9 @@ def segmentContent(conversationData, path):
     for data in lines:
         data = data.rstrip('\n')
         data = data.split('| ')
-        if data[0] == '文節の組み合わせ':
+        if data[0] == '文節の組み合わせ　':
             segmentLabelList.append(data[1].split(','))
-        elif data[0] == '応答ラベルリスト':
+        elif data[0] == '応答のラベルリスト':
             labelListData.append(data[1].split(','))
         else:
             continue
@@ -485,7 +492,8 @@ def segmentContent(conversationData, path):
                 f.write('応答のラベル: ' + str(label) + '\n')
             for data in content:
                 with open(writePath, mode='a') as f:
-                    f.write('文節: ' + str(data['content']) + str(data['clauseTime']) + '\n')
+                    f.write('文節: ' + str(data['content']) +
+                            ' ' + str(data['clauseTime']) + '\n')
                     f.write('応答: ' + str(data['outou']) + '\n')
             with open(writePath, mode='a') as f:
                 f.write('\n')
@@ -528,6 +536,8 @@ def comparison(a, b, c):    # 一致などの比較
     with open('moreResponse.txt', mode='w') as f:
         f.write('')
     with open('countArchetypes.txt', mode='w') as f:
+        f.write('')
+    with open('tfidf.txt', mode='w') as f:
         f.write('')
 
     for key in allValue:
@@ -662,6 +672,21 @@ def comparison(a, b, c):    # 一致などの比較
     print('fileWrite at moreResponse.txt : ３人のがしている文節応答（あいづち以外）')
 
 
+def tf(term, length):
+    number = list(term.values())[0]
+    # print(term, number, length)
+    return number / length
+
+
+def idf(target, allData, length):
+    count = 0
+    for i in allData:
+        tmp = list(filter(lambda x: list(x.keys())[0] == target, allData[i]))
+        if len(tmp) != 0:
+            count += 1
+    return math.log2(length / count)
+
+
 def countArchetypes(data1, data2):
     data = copy.deepcopy(data1)
     data.update(data2)
@@ -708,7 +733,7 @@ def countArchetypes(data1, data2):
         result[key] = []
         for k, v in sorted(value.items(), key=lambda x: -x[1]):
             result[key].append({k: v})
-
+    
     f = open('countArchetypes.txt', mode='a')
     for key, value in result.items():
         f.write(key + '\n')
@@ -720,13 +745,35 @@ def countArchetypes(data1, data2):
     f.close()
     print('fileWrite at countArchetypes.txt : 文節を原型に分割しラベルごとに数をカウント（名詞、動詞、形容詞、副詞のみ）')
 
-    # デバック用　数を数える
+    # tf-idfの計算
+    tfidf = {}
+    labelNum = len(list(result))
     for key, value in result.items():
-        print(key, end=': ')
         summ = 0
+        tfidf[key] = {}
         for valueData in value:
             summ += list(valueData.values())[0]
-        print(summ)
+        for valueData in value:
+            target = list(valueData.keys())[0]
+            ans = tf(valueData, summ) * idf(target, result, labelNum)
+            tfidf[key].update({target: round(ans, 4)})
+
+    result = {}
+    for key, value in tfidf.items():
+        result[key] = []
+        for k, v in sorted(value.items(), key=lambda x: -x[1]):
+            result[key].append({k: v})
+
+    f = open('tfidf.txt', mode='a')
+    for key, value in result.items():
+        f.write(key + '\n')
+        for i, valueData in enumerate(value):
+            f.write(str(valueData) + ', ')
+            if i % 5 == 3:
+                f.write('\n')
+        f.write('\n')
+    f.close()
+    print('fileWrite at tfidf.txt : tfidfを計算')
 
 
 if __name__ == '__main__':

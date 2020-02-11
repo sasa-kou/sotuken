@@ -2,6 +2,8 @@ import glob
 import sys
 import os
 import shutil
+import pprint
+import MeCab
 from functools import reduce
 import copy
 path = 'disagreementResult.txt'
@@ -233,7 +235,8 @@ def count(data, targetData):
         num = flag.index(True)
         allData = int(targetData[num].split(':')[1])
         parcentage = round(wordList.count(word)/allData*100, 2)
-        result.update({word + ' ' + str(wordList.count(word)) + '/' + str(allData): parcentage})
+        result.update({word + ' ' + str(wordList.count(word)) +
+                       '/' + str(allData): parcentage})
 
     for k, v in sorted(result.items(), key=lambda x: -x[1]):
         answer.append({k: v})
@@ -245,7 +248,7 @@ def count(data, targetData):
     print(answer[0:10])
 
 
-def match(targetData, *args):
+def match(targetData, writeFlag, *args):
     result = []
     wordList = []  # 出現する単語を全て保存
     keyWord = []  # 単語の種類を保存
@@ -256,7 +259,7 @@ def match(targetData, *args):
             flag = list(map(lambda x: data in x[index], args))
             if False not in flag:
                 result.append(data)
-    # print(len(result))
+    # print('ch', len(result))
 
     for data in result:
         word = list(data.keys())[0]
@@ -273,7 +276,8 @@ def match(targetData, *args):
         num = flag.index(True)
         allData = int(targetData[num].split(':')[1])
         parcentage = round(wordList.count(word)/allData*100, 2)
-        tmp.update({word + ' ' + str(wordList.count(word)) + '/' + str(allData): parcentage})
+        tmp.update({word + ' ' + str(wordList.count(word)) +
+                    '/' + str(allData): parcentage})
 
     for k, v in sorted(tmp.items(), key=lambda x: -x[1]):
         answer.append({k: v})
@@ -281,7 +285,90 @@ def match(targetData, *args):
             f.write(str(k) + ':' + str(v) + '\n')
     with open(path2, mode='a') as f:
         f.write('\n')
-    print(answer[0:10])
+
+    if writeFlag:
+        pprint.pprint(answer)
+
+    else:
+        print(answer[:10])
+
+
+def get(seq):
+    # ３人に共通するものを取り出す
+    seen = []
+    return [x for x in seq if seq.count(x) > 2 and not seen.append(x) and seen.count(x) == 1]
+
+
+def writeDetail(targetData, a, b, c, detailA, detailB, detailC):
+    timeList = {}
+    wordList = {}  # 出現する単語を全て保存
+    keyWord = {}  # 単語の種類を保存
+    select = ['名詞数詞', '連体詞*', '代名詞*', '形状詞一般', '感動詞一般']
+    path = 'disagreementContent.txt'
+    with open(path, mode='w') as f:
+        f.write('')
+
+    for key in select:
+        wordList[key.split(':')[0]] = []
+        keyWord[key.split(':')[0]] = []
+
+    for index in a:
+        timeList[index] = []
+        for data in a[index]:
+            timeList[index].append(list(data.values())[0])
+        for data in b[index]:
+            timeList[index].append(list(data.values())[0])
+        for data in c[index]:
+            timeList[index].append(list(data.values())[0])
+
+    for index in timeList:
+        # 重複値のみを取り出す
+        keyTimeList = get(timeList[index])
+        for time in keyTimeList:
+            tmp = list(filter(lambda x: list(x.values())
+                              [0] == time, a[index]))[0]
+            detailTmp = list(filter(lambda x: list(x.values())
+                                    [0] == time, detailA[index]))[0]
+            # データの整合性を確かめるために必要だった（整合性は確認済み）
+            # tmpA = list(filter(lambda x: list(x.values())[0] == time ,detailA[index]))
+            # tmpB = list(filter(lambda x: list(x.values())[0] == time ,detailB[index]))
+            # tmpC = list(filter(lambda x: list(x.values())[0] == time ,detailC[index]))
+            # if not tmpA == tmpB == tmpC:
+            #     print('Error')
+
+            word = list(tmp.keys())[0]
+
+            if 'pause' in word:
+                continue
+
+            detail = list(detailTmp.keys())[0]
+            if detail in select:
+                wordList[detail].append(word)
+                if word not in keyWord:
+                    keyWord[detail].append(word)
+
+    result = {}
+    for detail in keyWord:
+        result[detail] = {}
+        for word in keyWord[detail]:
+            # denominator = list(
+            #     filter(lambda x: word == x.split(':')[0], targetData))[0]
+            # denominator = int(denominator.split(':')[1])
+            # parcentage = round(wordList[detail].count(word)/denominator*100, 2)
+            length = wordList[detail].count(word)
+            result[detail].update({word: length})
+
+    f = open(path,mode='a')
+    for key, value in result.items():
+        f.write(key + '\n')
+        count = 0
+        for k, v in sorted(value.items(), key=lambda x: -x[1]):
+            f.write(str(k) + ': ' + str(v) + '\n')
+            count += v
+        f.write('\n')
+        # print(key, count)
+    f.close()
+    print('fileWrite at disagreementContent.txt: 応答できないタイミングのためのデータ')
 
 
 if __name__ == '__main__':
@@ -353,12 +440,16 @@ if __name__ == '__main__':
     count(morphemeDetail_c_not, detailData)
 
     print('応答した')
-    match(katariData, word_a, word_b, word_c)
-    match(hinshiData, morpheme_a, morpheme_b, morpheme_c)
-    match(detailData, morphemeDtail_a, morphemeDetail_b, morphemeDetail_c)
+    # match(katariData, False, word_a, word_b, word_c)
+    # match(hinshiData, False, morpheme_a, morpheme_b, morpheme_c)
+    match(detailData, True, morphemeDtail_a,
+          morphemeDetail_b, morphemeDetail_c)
     print()
     print('応答してない')
-    match(katariData, word_a_not, word_b_not, word_c_not)
-    match(hinshiData, morpheme_a_not, morpheme_b_not, morpheme_c_not)
-    match(detailData, morphemeDetail_a_not,
+    # match(katariData, False, word_a_not, word_b_not, word_c_not)
+    # match(hinshiData, False, morpheme_a_not, morpheme_b_not, morpheme_c_not)
+    match(detailData, True, morphemeDetail_a_not,
           morphemeDetail_b_not, morphemeDetail_c_not)
+
+    writeDetail(katariData, word_a_not, word_b_not, word_c_not, morphemeDetail_a_not,
+                morphemeDetail_b_not, morphemeDetail_c_not)
