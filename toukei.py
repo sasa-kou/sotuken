@@ -177,10 +177,10 @@ class Narrative:
                     self.time = round(
                         self.time + (self.timeArray[1] - self.timeArray[0]), 2)
                     self.timeArray = []  # 時間情報の初期化
-                num = file_index + '-' + index
-                self.narrative_compare.update({num: self.narrative})
-                self.hinshi_compare.update({num: self.hinshi})
-                self.detail_compare.update({num: self.detail})
+                file_number = file_index + '-' + index
+                self.narrative_compare.update({file_number: self.narrative})
+                self.hinshi_compare.update({file_number: self.hinshi})
+                self.detail_compare.update({file_number: self.detail})
                 self.narrative = []
                 self.hinshi = []
                 self.detail = []
