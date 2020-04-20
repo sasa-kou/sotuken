@@ -150,10 +150,10 @@ class Response:
         print(parce)
 
 
-class Katari:
+class Narrative:
     def __init__(self):
-        self.katari = []
-        self.katari_compare = {}
+        self.narrative = []
+        self.narrative_compare = {}
         self.timeArray = []
         self.time = 0
         self.hinshi = []
@@ -173,22 +173,22 @@ class Katari:
                     targetFileList = glob.glob(bigFile + file_end)
                     targetFileList.sort()
                     for targetFile in targetFileList:
-                        self.readKatari(targetFile)
+                        self.readNarrative(targetFile)
                     self.time = round(
                         self.time + (self.timeArray[1] - self.timeArray[0]), 2)
                     self.timeArray = []  # 時間情報の初期化
                 num = file_index + '-' + index
-                self.katari_compare.update({num: self.katari})
+                self.narrative_compare.update({num: self.narrative})
                 self.hinshi_compare.update({num: self.hinshi})
                 self.detail_compare.update({num: self.detail})
-                self.katari = []
+                self.narrative = []
                 self.hinshi = []
                 self.detail = []
 
-        return self.katari_compare, self.time, self.hinshi_compare, self.detail_compare
+        return self.narrative_compare, self.time, self.hinshi_compare, self.detail_compare
 
-    def readKatari(self, file_name):  # 語り手側  {語り終了時間:言葉}
-        file = open(file_name)  # データ入力
+    def readNarrative(self, file_name):  # 語り手側  {語り終了時間:言葉}
+        file = open(file_name)
         lines = file.readlines()
 
         for data in lines[0:len(lines)]:
@@ -226,7 +226,7 @@ class Katari:
             hinshi = data[1]
             detail = hinshi + data[2]
             end = float(data[num])
-            self.katari.append({end: word})
+            self.narrative.append({end: word})
             self.hinshi.append({end: hinshi})
             self.detail.append({end: detail})
 
@@ -234,13 +234,13 @@ class Katari:
 
     def length(self):
         num = 0
-        for index in list(self.katari_compare.keys()):
-            for data in self.katari_compare[index]:
+        for index in list(self.narrative_compare.keys()):
+            for data in self.narrative_compare[index]:
                 num += len(data)
         print('形態素数', num)
 
     def write(self):
-        count(self.katari_compare, 'katariCount.txt')
+        count(self.narrative_compare, 'katariCount.txt')
         count(self.hinshi_compare, 'hinshiCount.txt')
         count(self.detail_compare, 'detailCount.txt')
 
@@ -293,7 +293,7 @@ def fileWrite(katari, outou, filePath):
 
 
 if __name__ == '__main__':
-    kt = Katari()
+    kt = Narrative()
     katari, time, hinshi, detail = kt.read_data()
     kt.length()
     print("語り総時間：", time)
