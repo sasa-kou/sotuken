@@ -4,14 +4,17 @@ import os
 import shutil
 from functools import reduce
 import pprint
+
 path = 'toukeiResult.txt'
 with open(path, mode='w') as f:
     f.write('')
 
 fileArray = [
-    '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'
+    '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
+    '20', '21', '22', '23', '24'
 ]
 testData_num = ['1', '2', '3', '4', '5', '6', '7']
+
 
 class Outou:
     def __init__(self, file_name):
@@ -50,7 +53,7 @@ class Outou:
         for data in lines[0:len(lines)]:
             data = data.rstrip('\n')  # 改行の削除
             data = data.split(',')  # ','で分割
-            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
+            num = len(data) - 1  # １行の長さを取得(この先の利用を考え-1)
 
             # 例外処理 ＋　退避させた文字の破棄
             if num == 0:
@@ -74,9 +77,9 @@ class Outou:
 
             if 'label' in data[num]:
                 word = data[0]  # 応答文字の取得
-                word = tmp_str+word
+                word = tmp_str + word
                 label = data[num].lstrip('label=')  # labelの取得
-                begin = float(data[num-2])  # 開始時刻の取得
+                begin = float(data[num - 2])  # 開始時刻の取得
                 # print(word, label, begin)
 
                 self.outou.append({begin: word})
@@ -114,7 +117,7 @@ class Outou:
                 label = list(data.values())[0]
                 labelList.append(label)
                 outou = list(filter(lambda x: time == list(
-                    x.keys())[0], self.outou_compare[index]))[0]    # ラベルに対応する応答文字列を取得
+                    x.keys())[0], self.outou_compare[index]))[0]  # ラベルに対応する応答文字列を取得
                 value[index].append({label: list(outou.values())[0]})
 
                 if label not in keyLabel:
@@ -122,7 +125,7 @@ class Outou:
 
         for label in keyLabel:
             with open(path, mode='a') as f:
-                    f.write('ラベル：' + label + '\n')
+                f.write('ラベル：' + label + '\n')
             content = []
             keyList = []
             result = {}
@@ -131,15 +134,15 @@ class Outou:
                 for data in tmp:
                     content.append(list(data.values())[0])  # 応答文字列配列
 
-            keyList = list(set(content))    # 重複値を削除してkey値取得
+            keyList = list(set(content))  # 重複値を削除してkey値取得
             for key in keyList:
                 num = content.count(key)
                 result.update({key: num})
             for k, v in sorted(result.items(), key=lambda x: -x[1]):
                 labelNum = labelList.count(label)
                 with open(path, mode='a') as f:
-                    f.write(str(k) + ': ' + str(v) + '  ' + str(round(v/labelNum*100, 2)
-                                                                    ) + '% (' + str(v) + '/ ' + str(labelNum) + ')'+'\n')
+                    f.write(str(k) + ': ' + str(v) + '  ' + str(round(v / labelNum * 100, 2)
+                                                                ) + '% (' + str(v) + '/ ' + str(labelNum) + ')' + '\n')
             with open(path, mode='a') as f:
                 f.write('\n')
 
@@ -151,7 +154,7 @@ class Outou:
 
         for k, v in sorted(result.items(), key=lambda x: -x[1]):
             ans.append({k: v})
-            parce.append({k: round(v/size*100, 2)})
+            parce.append({k: round(v / size * 100, 2)})
         print(ans)
         print(parce)
 
@@ -200,13 +203,13 @@ class Katari:
         for data in lines[0:len(lines)]:
             data = data.rstrip('\n')  # 改行の削除
             data = data.split(',')  # ','で分割
-            num = len(data)-1  # １行の長さを取得(この先の利用を考え-1)
+            num = len(data) - 1  # １行の長さを取得(この先の利用を考え-1)
 
             # 例外処理
             if num == 0:
                 continue
             elif data[0] == "silB":
-                begin = float(data[num-1])  # 開始時刻の取得
+                begin = float(data[num - 1])  # 開始時刻の取得
                 if len(self.timeArray) == 0:
                     self.timeArray.append(begin)
                 else:
@@ -268,6 +271,7 @@ def count(data, filePath):
         with open(filePath, mode='a') as f:
             f.write(word + ':' + str(wordList.count(word)) + '\n')
 
+
 def fileWrite(katari, outou, filePath):
     time_list = []
     with open('toukeiResult' + filePath + '.txt', mode='w') as f:
@@ -308,7 +312,7 @@ if __name__ == '__main__':
     ot = Outou('a')
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
-    print("１秒間あたりの応答数：", round(ot.count()/time, 2), ot.count(), '/', time)
+    print("１秒間あたりの応答数：", round(ot.count() / time, 2), ot.count(), '/', time)
     ot.label()
     # fileWrite(katari, outou, 'A')
 
@@ -316,7 +320,7 @@ if __name__ == '__main__':
     ot = Outou('b')
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
-    print("１秒間あたりの応答数：", round(ot.count()/time, 2), ot.count(), '/', time)
+    print("１秒間あたりの応答数：", round(ot.count() / time, 2), ot.count(), '/', time)
     ot.label()
     # fileWrite(katari, outou, 'B')
 
@@ -324,6 +328,6 @@ if __name__ == '__main__':
     ot = Outou('c')
     outou, outou_label = ot.read_data()
     print('応答の個数：', ot.count())
-    print("１秒間あたりの応答数：", round(ot.count()/time, 2), ot.count(), '/', time)
+    print("１秒間あたりの応答数：", round(ot.count() / time, 2), ot.count(), '/', time)
     ot.label()
     # fileWrite(katari, outou, 'C')
