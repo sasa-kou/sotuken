@@ -14,9 +14,9 @@ testData_num = ['1', '2', '3', '4', '5', '6', '7']
 class Response:
     def __init__(self, file_target):
         self.response = []  # tmp変数
-        self.response_label = []    # tmp変数
+        self.response_label = []  # tmp変数
         self.response_compare = {}  # 応答内容の戻り値
-        self.response_label_compare = {}    # 応答ラベルの戻り値
+        self.response_label_compare = {}  # 応答ラベルの戻り値
         self.file_target = file_target
 
     def read_data(self):  # 全ファイルを検索して読み込み
@@ -30,13 +30,13 @@ class Response:
                 targetFileList = glob.glob(files[0] + index + file_end)
                 targetFileList.sort()
                 for targetFile in targetFileList:
-                    self.readResponse(targetFile)   # データの読み込み
+                    self.readResponse(targetFile)  # データの読み込み
 
                 file_number = file_index + '-' + index
                 self.response_compare.update({file_number: self.response})
                 self.response_label_compare.update({file_number: self.response_label})
                 self.response = []  # 初期化
-                self.response_label = []    # 初期化
+                self.response_label = []  # 初期化
 
         return self.response_compare, self.response_label_compare
 
